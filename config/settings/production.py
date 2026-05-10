@@ -4,8 +4,9 @@ from .base import env
 DEBUG = False
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
-
-
+print(env.str("DATABASE_NAME"))
+print(env.str("DATABASE_USER_SNAME"))
+print(env.str("DATABASE_PASS_WORD"))
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
