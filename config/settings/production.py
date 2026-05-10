@@ -1,9 +1,10 @@
 from .base import *  # noqa
 from .base import env
 
-DEBUG = False
+DEBUG = env.bool("DJANGO_DEBUG", False)
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+ADMIN_URL = env.str("DJANGO_ADMIN_URL")
 
 DATABASES = {
     'default': {
