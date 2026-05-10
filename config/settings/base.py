@@ -61,6 +61,16 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': env.str("DATABASE_NAME"),
+        'USER': env.str("DATABASE_USER_SNAME"),
+        'PASSWORD': env.str("DATABASE_PASS_WORD"),
+        'HOST': env.str("DATABASE_HOST"),
+        'PORT': '5432',
+    }
+}
 
 # DATABASES = {
 #     "default": env.db("DATABASE_URL", default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
