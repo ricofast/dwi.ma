@@ -39,8 +39,9 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-
+ADMIN_URL = env.str("DJANGO_ADMIN_URL")
 ROOT_URLCONF = "config.urls"
+
 
 TEMPLATES = [
     {
@@ -59,6 +60,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
+
 
 # DATABASES = {
 #     "default": env.db("DATABASE_URL", default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
