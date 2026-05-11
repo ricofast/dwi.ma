@@ -803,3 +803,95 @@ Show:
 - New tests
 - How to run migrations
 - How to run tests
+
+## Milestone 4 — Extended (Authentication PWA and WhatsApp)
+Implement the authentication bridge for PWA and WhatsApp.
+
+Goal:
+PWA views should use normal Django login/session authentication. WhatsApp webhooks should not require login but should map inbound WhatsApp identities to User accounts.
+
+Requirements:
+
+1. PWA auth
+- Configure LOGIN_URL, LOGIN_REDIRECT_URL, and LOGOUT_REDIRECT_URL.
+- Add LoginRequiredMixin to protected PWA views.
+- Add a require_auth(request) helper for Django Ninja APIs.
+
+2. Identity models
+Create or complete:
+- PhoneIdentity
+- WhatsAppIdentity
+
+PhoneIdentity fields:
+- user
+- phone_number
+- is_verified
+- verified_at
+- created_at
+
+WhatsAppIdentity fields:
+- user nullable at first if needed
+- wa_id
+- phone_number nullable
+- display_name nullable
+- is_linked
+- linked_at
+- last_seen_at
+- raw_profile JSON
+- created_at
+- updated_at
+
+3. WhatsApp identity service
+Create:
+apps/accounts/services/whatsapp_identity.py
+
+Implement:
+- find_or_create_whatsapp_identity(wa_id, phone_number=None, display_name=None, raw_profile=None)
+- link_whatsapp_identity_to_user(identity, user)
+- get_user_from_whatsapp_identity(wa_id)
+
+4. Magic link service
+Create:
+apps/accounts/services/magic_links.py
+
+Implement:
+- create_whatsapp_login_token(wa_identity, action=None, next_url=None)
+- validate_whatsapp_login_token(token)
+- consume_whatsapp_login_token(token)
+
+Token rules:
+- Signed token
+- Expires after 10 minutes
+- One-time use if persisted
+- Redirects only to safe internal URLs
+- Does not expose secrets
+
+5. WhatsApp-to-PWA login view
+Create a view:
+GET /accounts/whatsapp-login/<token>/
+
+Behavior:
+- Validate token
+- Find or create user
+- Link WhatsApp identity to user
+- Log user in using Django session
+- Redirect to next_url or dashboard
+
+6. Security
+- Do not use login_required on WhatsApp webhook.
+- Webhook must use provider verification/signature checks instead.
+- Do not allow open redirects.
+- Do not expose whether a phone number already has an account.
+- Store raw WhatsApp identity data for debugging.
+
+7. Tests
+Add tests for:
+- Protected PWA view redirects anonymous user to login.
+- Authenticated user can access protected PWA view.
+- WhatsApp webhook endpoint does not require login.
+- WhatsApp identity is created from inbound message data.
+- WhatsApp identity can be linked to user.
+- Magic login token expires.
+- Magic login token cannot be reused if one-time storage is implemented.
+- Unsafe next_url is rejected.
+
