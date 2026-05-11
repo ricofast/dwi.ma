@@ -76,6 +76,13 @@ class DocumentTests(TestCase):
         extract_resp = self.client.post(f"/api/documents/{doc_id}/extract/")
         self.assertEqual(extract_resp.status_code, 200)
 
+    def test_extract_endpoint_accepts_get_for_pwa_fallback(self):
+        f = SimpleUploadedFile("slash2.pdf", text_pdf_bytes(), content_type="application/pdf")
+        response = self.client.post("/api/documents/upload", {"file": f, "consent_accepted": "true"})
+        doc_id = response.json()["document_id"]
+        extract_resp = self.client.get(f"/api/documents/{doc_id}/extract")
+        self.assertEqual(extract_resp.status_code, 200)
+
     def test_scanned_pdf_fails_gracefully(self):
         f = SimpleUploadedFile("scan.pdf", scanned_pdf_bytes(), content_type="application/pdf")
         response = self.client.post("/api/documents/upload", {"file": f, "consent_accepted": "true"})

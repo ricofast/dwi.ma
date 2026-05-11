@@ -1,7 +1,6 @@
 from datetime import datetime
 from uuid import UUID
 
-from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from ninja import File, Form, Router
@@ -83,6 +82,8 @@ def _extract_document(request, document_id: UUID):
 
 @router.post("/documents/{document_id}/extract")
 @router.post("/documents/{document_id}/extract/")
+@router.get("/documents/{document_id}/extract")
+@router.get("/documents/{document_id}/extract/")
 def extract_document(request, document_id: UUID):
     return _extract_document(request, document_id)
 
