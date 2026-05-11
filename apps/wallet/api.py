@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from ninja import Router, Schema
 
+from apps.accounts.auth import require_auth
 from .models import UsageEvent
 from .services import add_credits, get_wallet
 
@@ -34,9 +35,8 @@ class AdminAdjustIn(Schema):
 
 @router.get("/wallet/", response=WalletResponse)
 def wallet_detail(request):
-    if not request.user.is_authenticated:
-        return 401, {"detail": "Authentication required"}
-    wallet = get_wallet(request.user)
+    user = require_auth(request)
+    wallet = get_wallet(user)
     return WalletResponse(
         balance=wallet.balance,
         total_purchased=wallet.total_purchased,
@@ -46,9 +46,8 @@ def wallet_detail(request):
 
 @router.get("/wallet/usage/", response=list[UsageEventResponse])
 def wallet_usage(request):
-    if not request.user.is_authenticated:
-        return 401, {"detail": "Authentication required"}
-    events = UsageEvent.objects.filter(user=request.user).order_by("-created_at")[:50]
+    user = require_auth(request)
+    events = UsageEvent.objects.filter(user=user).order_by("-created_at")[:50]
     return [
         UsageEventResponse(
             id=str(event.id),
@@ -67,8 +66,7 @@ def wallet_usage(request):
 
 @router.post("/wallet/admin-adjust/")
 def wallet_admin_adjust(request, payload: AdminAdjustIn):
-    if not request.user.is_authenticated:
-        return 401, {"detail": "Authentication required"}
+    user = require_auth(request)
     if not request.user.is_staff:
         return 403, {"detail": "Staff only"}
 

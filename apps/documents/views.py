@@ -1,21 +1,24 @@
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, render
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import get_object_or_404
+from django.views.generic import TemplateView
 
 from .models import UploadedDocument
 
 
-@login_required
-def upload_page(request):
-    return render(request, "documents/upload.html")
+class UploadPageView(LoginRequiredMixin, TemplateView):
+    template_name = "documents/upload.html"
 
 
-@login_required
-def document_detail(request, document_id):
-    document = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
-    return render(request, "documents/detail.html", {"document": document})
+class UserDocumentMixin(LoginRequiredMixin):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["document"] = get_object_or_404(UploadedDocument, id=self.kwargs["document_id"], user=self.request.user)
+        return context
 
 
-@login_required
-def extraction_result(request, document_id):
-    document = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
-    return render(request, "documents/extraction_result.html", {"document": document})
+class DocumentDetailView(UserDocumentMixin, TemplateView):
+    template_name = "documents/detail.html"
+
+
+class ExtractionResultView(UserDocumentMixin, TemplateView):
+    template_name = "documents/extraction_result.html"

@@ -8,6 +8,7 @@ from ninja.files import UploadedFile
 from ninja.errors import HttpError
 from pydantic import BaseModel
 
+from apps.accounts.auth import require_auth
 from apps.documents.models import UploadedDocument
 from apps.documents.services.extraction import calculate_file_hash, extract_text, validate_document_file
 
@@ -24,8 +25,7 @@ class DocumentOut(BaseModel):
 
 @router.post("/documents/upload", response=DocumentOut)
 def upload_document(request, file: UploadedFile = File(...), consent_accepted: bool = Form(False), source: str = Form("pwa")):
-    if not request.user.is_authenticated:
-        raise HttpError(401, "Authentication required")
+    require_auth(request)
     if not consent_accepted:
         raise HttpError(400, "Privacy consent is required")
     try:
@@ -54,8 +54,7 @@ def upload_document(request, file: UploadedFile = File(...), consent_accepted: b
 
 @router.get("/documents/{document_id}")
 def get_document(request, document_id: UUID):
-    if not request.user.is_authenticated:
-        raise HttpError(401, "Authentication required")
+    require_auth(request)
     doc = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
     return {
         "document_id": doc.id,
@@ -70,8 +69,7 @@ def get_document(request, document_id: UUID):
 
 
 def _extract_document(request, document_id: UUID):
-    if not request.user.is_authenticated:
-        raise HttpError(401, "Authentication required")
+    require_auth(request)
     doc = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
     doc.status = UploadedDocument.Status.EXTRACTING
     doc.save(update_fields=["status", "updated_at"])
@@ -90,8 +88,7 @@ def extract_document(request, document_id: UUID):
 
 @router.get("/documents/{document_id}/extracted-text")
 def get_extracted_text(request, document_id: UUID):
-    if not request.user.is_authenticated:
-        raise HttpError(401, "Authentication required")
+    require_auth(request)
     doc = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
     if not hasattr(doc, "extracted_text"):
         raise HttpError(404, "Extracted text not available")
@@ -106,8 +103,7 @@ def get_extracted_text(request, document_id: UUID):
 
 @router.delete("/documents/{document_id}")
 def delete_document(request, document_id: UUID):
-    if not request.user.is_authenticated:
-        raise HttpError(401, "Authentication required")
+    require_auth(request)
     doc = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
     storage = doc.file.storage
     file_name = doc.file.name
@@ -131,8 +127,7 @@ class ExplainIn(BaseModel):
 @router.get("/documents/{document_id}/explain")
 @router.get("/documents/{document_id}/explain/")
 def explain_doc(request, document_id: UUID, payload: ExplainIn):
-    if not request.user.is_authenticated:
-        raise HttpError(401, "Authentication required")
+    require_auth(request)
     doc = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
     if not hasattr(doc, "extracted_text") or doc.status != UploadedDocument.Status.EXTRACTED:
         raise HttpError(400, "Document extraction is required")
@@ -145,8 +140,7 @@ def explain_doc(request, document_id: UUID, payload: ExplainIn):
 
 @router.get("/documents/{document_id}/analysis")
 def get_analysis(request, document_id: UUID):
-    if not request.user.is_authenticated:
-        raise HttpError(401, "Authentication required")
+    require_auth(request)
     doc = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
     analysis = DocumentAnalysis.objects.filter(document=doc).first()
     if not analysis:
@@ -156,7 +150,6 @@ def get_analysis(request, document_id: UUID):
 
 @router.get("/assistant/jobs/{job_id}")
 def get_job_status(request, job_id: UUID):
-    if not request.user.is_authenticated:
-        raise HttpError(401, "Authentication required")
+    require_auth(request)
     job = get_object_or_404(AIJob, id=job_id, user=request.user)
     return {"job_id": str(job.id), "status": job.status, "result_available": bool(job.result_json), "error_message": job.error_message or ""}
