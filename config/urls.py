@@ -7,6 +7,6 @@ urlpatterns = [
     path("", include("apps.core.urls")),
     path("document/", include("apps.documents.urls", namespace="document")),
     path("api/", include("apps.core.api_urls")),
-    path("accounts/", include("apps.accounts.urls")),
+    path("accounts/", include("apps.accounts.urls", namespace="accounts")),
     path("whatsapp/", include("apps.whatsapp.urls")),
 ]
