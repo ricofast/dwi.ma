@@ -1,5 +1,6 @@
 from datetime import datetime
 from uuid import UUID
+
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
@@ -69,6 +70,7 @@ def get_document(request, document_id: UUID):
     }
 
 
+def _extract_document(request, document_id: UUID):
 @router.post("/documents/{document_id}/extract")
 def extract_document(request, document_id: UUID):
     if not request.user.is_authenticated:
@@ -79,6 +81,12 @@ def extract_document(request, document_id: UUID):
     extract_text(doc)
     doc.refresh_from_db()
     return {"document_id": str(doc.id), "status": doc.status}
+
+
+@router.post("/documents/{document_id}/extract")
+@router.post("/documents/{document_id}/extract/")
+def extract_document(request, document_id: UUID):
+    return _extract_document(request, document_id)
 
 
 @router.get("/documents/{document_id}/extracted-text")

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-3">
+  <h1 class="h5">{{ document.original_filename }}</h1>
+  <ul class="list-group mb-3">
+    <li class="list-group-item">الحالة: {{ document.status }}</li>
+    <li class="list-group-item">النوع: {{ document.file_type }}</li>
+    <li class="list-group-item">الحجم: {{ document.file_size }} bytes</li>
+  </ul>
+  <a class="btn btn-primary w-100" href="/documents/{{ document.id }}/result/">شوف نتيجة الاستخراج</a>
+</div>
+{% endblock %}
