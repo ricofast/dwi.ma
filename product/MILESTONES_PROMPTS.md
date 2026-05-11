@@ -1224,3 +1224,456 @@ Show:
 - New tests
 - How to run migrations
 - How to run tests
+
+## Milestone 6 — WhatsApp Companion
+Read AGENTS.md and the product documentation, especially:
+
+- product/PRD.md
+- product/API_SPEC.md
+- product/WHATSAPP_FLOWS.md
+- product/MILESTONES.md
+- product/SECURITY_PRIVACY.md
+- product/DATA_MODEL.md
+
+Implement Milestone 6 only: WhatsApp Companion Integration.
+
+Goal:
+Implement WhatsApp as a companion channel for dwi.ma. Users should be able to interact with dwi.ma through WhatsApp menus, send simple text messages, link their WhatsApp identity to a user account, and receive AI results generated from previous milestones.
+
+Important:
+Do not build a generic chatbot. WhatsApp must remain task-specific:
+- Explain document
+- Explain pasted text
+- Generate message later
+- Check credits
+- Send result to WhatsApp
+- Link to PWA for upload/payment/history
+
+This milestone should work with a MockWhatsAppProvider first, so tests do not require real Meta credentials.
+
+Requirements:
+
+1. Models
+
+Create or complete the following models in the whatsapp app.
+
+WhatsAppWebhookEvent:
+- id: UUID primary key
+- event_id nullable
+- payload_json
+- processed boolean default false
+- processing_error nullable
+- received_at
+- processed_at nullable
+
+WhatsAppInboundMessage:
+- id: UUID primary key
+- user nullable
+- wa_id
+- phone_number nullable
+- message_id unique
+- message_type: text, audio, image, document, interactive, button, list_reply, unknown
+- text_body nullable
+- media_id nullable
+- interactive_payload JSON nullable
+- raw_payload JSON
+- created_at
+
+WhatsAppOutboundMessage:
+- id: UUID primary key
+- user nullable
+- wa_id
+- phone_number nullable
+- message_id nullable
+- message_type: text, interactive_buttons, interactive_list, template, document, unknown
+- text_body nullable
+- payload_json
+- status: queued, sent, delivered, read, failed
+- error_message nullable
+- created_at
+- updated_at
+
+WhatsAppConversationState:
+- id: UUID primary key
+- user nullable
+- wa_id unique
+- current_state: main_menu, waiting_for_text, waiting_for_document, waiting_for_action, linked, unknown
+- context JSON field
+- last_seen_at
+- created_at
+- updated_at
+
+2. Identity mapping
+
+Use or create identity models in accounts app:
+
+WhatsAppIdentity:
+- user nullable
+- wa_id unique
+- phone_number nullable
+- display_name nullable
+- is_linked boolean default false
+- linked_at nullable
+- last_seen_at nullable
+- raw_profile JSON
+- created_at
+- updated_at
+
+Create service:
+
+apps/accounts/services/whatsapp_identity.py
+
+Implement:
+
+- find_or_create_whatsapp_identity(wa_id, phone_number=None, display_name=None, raw_profile=None)
+- link_whatsapp_identity_to_user(identity, user)
+- get_user_from_whatsapp_identity(wa_id)
+
+Rules:
+- WhatsApp webhook endpoints must not require Django login.
+- WhatsApp identity is based on wa_id and/or phone number from webhook payload.
+- If identity is linked to a user, process using that user.
+- If identity is not linked, create identity and send secure PWA link or onboarding message.
+
+3. WhatsApp provider abstraction
+
+Create:
+
+apps/whatsapp/services/providers.py
+
+Implement:
+
+BaseWhatsAppProvider:
+- send_text(to, body)
+- send_interactive_buttons(to, body, buttons)
+- send_interactive_list(to, body, sections)
+- mark_as_read(message_id) optional
+
+MockWhatsAppProvider:
+- Stores outbound payloads locally or returns fake message IDs.
+- Must be used in tests.
+- Must not require Meta credentials.
+
+MetaCloudWhatsAppProvider:
+- Reads credentials from settings/environment:
+  WHATSAPP_ACCESS_TOKEN
+  WHATSAPP_PHONE_NUMBER_ID
+  WHATSAPP_BUSINESS_ACCOUNT_ID
+  WHATSAPP_VERIFY_TOKEN
+  WHATSAPP_APP_SECRET
+- Sends text messages through Meta Cloud API.
+- Sends interactive buttons.
+- Sends interactive list messages.
+- Fails gracefully if credentials are missing.
+- Logs provider errors safely.
+
+Provider selection:
+- WHATSAPP_PROVIDER=mock or meta
+- Default to mock in local/test environments.
+
+4. Webhook verification
+
+Implement endpoints using Django Ninja or Django views, following existing project style:
+
+GET /api/whatsapp/webhook
+
+Behavior:
+- Accept hub.mode
+- Accept hub.challenge
+- Accept hub.verify_token
+- Compare verify token with WHATSAPP_VERIFY_TOKEN
+- Return challenge if valid
+- Return 403 if invalid
+
+POST /api/whatsapp/webhook
+
+Behavior:
+- Do not require login.
+- Verify request signature if WHATSAPP_APP_SECRET is configured.
+- Store raw payload as WhatsAppWebhookEvent.
+- Return 200 quickly.
+- Start async processing task through Celery.
+- If Celery is not available in local mode, allow sync fallback only if existing project pattern supports it.
+
+5. Webhook processing task
+
+Create or update:
+
+apps/whatsapp/tasks.py
+
+Task:
+
+process_whatsapp_webhook_event(event_id)
+
+Behavior:
+1. Load webhook event.
+2. Parse messages and statuses.
+3. For inbound messages:
+   - Extract wa_id
+   - Extract phone number if available
+   - Extract profile name if available
+   - Create or update WhatsAppIdentity
+   - Create WhatsAppInboundMessage
+   - Update WhatsAppConversationState
+   - Route message to basic workflow handler
+4. For status events:
+   - Update WhatsAppOutboundMessage status if message ID matches
+5. Mark webhook event as processed.
+6. Store safe error if processing fails.
+
+6. Message parsing service
+
+Create:
+
+apps/whatsapp/services/parser.py
+
+Implement:
+
+- parse_webhook_payload(payload)
+- extract_inbound_messages(payload)
+- extract_status_updates(payload)
+- normalize_message_type(raw_message)
+- get_text_from_message(raw_message)
+- get_interactive_reply(raw_message)
+
+Support at least:
+- text
+- interactive button reply
+- interactive list reply
+- document metadata
+- image metadata
+- audio metadata
+- unknown fallback
+
+7. Workflow router
+
+Create:
+
+apps/whatsapp/services/router.py
+
+Implement:
+
+route_inbound_message(inbound_message)
+
+Behavior:
+- If user sends "menu", "salam", "السلام", "hi", or unknown first message, send main menu.
+- If user selects “شرح نص”, set state to waiting_for_text.
+- If user selects “شرح وثيقة”, send PWA upload link for now.
+- If user selects “الرصيد ديالي”, return credit balance if user is linked; otherwise send account-link message.
+- If state is waiting_for_text and user sends text, use existing text explanation service from Milestone 5 if available.
+- If user is not linked and tries paid/protected action, send secure link to PWA login/linking flow.
+
+Important:
+- Do not implement open-ended AI chat.
+- Unknown messages should return the menu, not call the LLM directly.
+
+8. WhatsApp menu messages
+
+Implement service:
+
+apps/whatsapp/services/messages.py
+
+Functions:
+
+- send_main_menu(wa_id)
+- send_account_link_message(wa_id)
+- send_document_upload_link(wa_id, signed_url)
+- send_text_explanation_prompt(wa_id)
+- send_credit_balance(wa_id, balance)
+- send_processing_message(wa_id)
+- send_error_message(wa_id, safe_message)
+- send_result_message(wa_id, result_text)
+
+Main menu copy:
+
+Salam 👋 Ana dwi.ma.
+شنو بغيتي ندير ليك؟
+
+1. نشرح ليك وثيقة
+2. نشرح ليك نص
+3. نكتب ليك رسالة
+4. نشوف الرصيد ديالك
+
+Use interactive buttons or list messages where supported.
+If interactive messages are not available in mock/local mode, send plain text fallback.
+
+9. Send result to WhatsApp
+
+Add endpoint:
+
+POST /api/whatsapp/send-result
+
+Input:
+{
+  "job_id": "uuid",
+  "phone_number": "+2126XXXXXXXX"
+}
+
+Behavior:
+- Requires authenticated PWA user.
+- Verify job belongs to user.
+- Verify job is completed.
+- Find linked WhatsAppIdentity for user or use provided phone number if allowed by current implementation.
+- Send result_text or full_answer_darija to WhatsApp.
+- Create WhatsAppOutboundMessage.
+- Return send status.
+
+Also add UI button on result pages:
+- “Send to WhatsApp”
+- “صيفط النتيجة للواتساب”
+
+10. PWA account linking
+
+If not already implemented, add minimal WhatsApp linking support:
+
+- User can enter WhatsApp phone number in settings.
+- System stores it as unverified or linked depending on existing auth flow.
+- Full OTP verification can be deferred if not implemented yet.
+- Add clear TODO comments where production verification is required.
+
+If magic link service already exists:
+- Use it to link WhatsApp identity to authenticated user.
+- Links must expire.
+- Do not allow unsafe external redirects.
+
+11. API endpoints
+
+Add:
+
+GET /api/whatsapp/webhook
+POST /api/whatsapp/webhook
+POST /api/whatsapp/send-result
+GET /api/whatsapp/conversation-state
+POST /api/whatsapp/send-test-message
+
+Rules:
+- send-test-message should be staff-only or debug-only.
+- webhook endpoints must not require login.
+- protected endpoints must require authenticated user.
+
+12. Admin
+
+Register:
+
+- WhatsAppWebhookEvent
+- WhatsAppInboundMessage
+- WhatsAppOutboundMessage
+- WhatsAppConversationState
+- WhatsAppIdentity if model lives in accounts
+
+Admin should show:
+- wa_id
+- user
+- message_type
+- status
+- current_state
+- processed
+- created_at
+- updated_at
+
+Add filters:
+- message_type
+- status
+- processed
+- current_state
+- created_at
+
+13. Settings
+
+Add to settings and .env.example:
+
+WHATSAPP_PROVIDER=mock
+WHATSAPP_VERIFY_TOKEN=
+WHATSAPP_ACCESS_TOKEN=
+WHATSAPP_PHONE_NUMBER_ID=
+WHATSAPP_BUSINESS_ACCOUNT_ID=
+WHATSAPP_APP_SECRET=
+WHATSAPP_API_VERSION=v23.0
+WHATSAPP_DEFAULT_COUNTRY_CODE=212
+
+14. Tests
+
+Add tests for:
+
+Webhook verification:
+- Valid verify token returns challenge.
+- Invalid verify token returns 403.
+
+Webhook POST:
+- Webhook POST does not require login.
+- Raw webhook event is stored.
+- Webhook returns 200 quickly.
+- Processing task is dispatched or sync fallback runs.
+
+Parsing:
+- Text message is parsed correctly.
+- Interactive button reply is parsed correctly.
+- Interactive list reply is parsed correctly.
+- Unknown message type does not crash parser.
+
+Identity:
+- WhatsAppIdentity is created from inbound wa_id.
+- Existing WhatsAppIdentity is reused.
+- Linked identity maps to user.
+- Unlinked identity receives account-link message for protected actions.
+
+Conversation routing:
+- “salam” sends main menu.
+- “menu” sends main menu.
+- Selecting “شرح نص” sets state to waiting_for_text.
+- Waiting-for-text state processes user text using existing text explanation flow if available.
+- Selecting “شرح وثيقة” sends PWA upload link.
+- Selecting “الرصيد ديالي” returns wallet balance for linked user.
+- Unlinked user asking for credits receives link-account message.
+
+Outbound provider:
+- Mock provider returns fake message ID.
+- Outbound message is stored.
+- Provider failure marks outbound message as failed.
+
+Send result:
+- Authenticated user can send completed AI result to WhatsApp.
+- User cannot send another user’s result.
+- Incomplete job cannot be sent.
+- Missing WhatsApp identity returns friendly error.
+- Successful send creates WhatsAppOutboundMessage.
+
+Security:
+- Webhook signature check is used if WHATSAPP_APP_SECRET is configured.
+- Unsafe redirect URLs are rejected if account-link flow is used.
+
+15. Constraints
+
+Do not implement:
+- Digital Virgo payments.
+- Real payment prompts beyond existing wallet balance.
+- Voice transcription.
+- WhatsApp media document upload processing.
+- OCR.
+- Generic chatbot.
+- Inwi support mode.
+- Native mobile app.
+- Marketing templates.
+
+This milestone is only about:
+- WhatsApp webhook.
+- WhatsApp identity mapping.
+- Mock and Meta provider abstraction.
+- Basic task-specific menu.
+- Result delivery to WhatsApp.
+- Integration with existing text explanation and wallet where available.
+
+16. After implementation
+
+Show:
+- Files changed
+- New models
+- New services
+- New API endpoints
+- New templates/buttons
+- New tests
+- New environment variables
+- How to run migrations
+- How to run WhatsApp tests
+- How to test locally with mock provider
+- What is needed to switch to real Meta Cloud API credentials
