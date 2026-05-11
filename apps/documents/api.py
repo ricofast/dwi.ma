@@ -115,3 +115,45 @@ def delete_document(request, document_id: UUID):
         storage.delete(file_name)
     doc.mark_deleted()
     return {"status": "deleted", "deleted_at": datetime.utcnow().isoformat()}
+
+from apps.assistant.models import AIJob
+from apps.documents.models import DocumentAnalysis
+from apps.documents.tasks import explain_document_task
+from apps.wallet.services import can_spend
+
+
+class ExplainIn(BaseModel):
+    output_language: str = "darija_arabic"
+
+
+@router.post("/documents/{document_id}/explain")
+def explain_doc(request, document_id: UUID, payload: ExplainIn):
+    if not request.user.is_authenticated:
+        raise HttpError(401, "Authentication required")
+    doc = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
+    if not hasattr(doc, "extracted_text") or doc.status != UploadedDocument.Status.EXTRACTED:
+        raise HttpError(400, "Document extraction is required")
+    if not can_spend(request.user, 1):
+        raise HttpError(402, "Insufficient credits")
+    job = AIJob.objects.create(user=request.user, job_type=AIJob.JobType.DOCUMENT_EXPLANATION, provider="", model="", status=AIJob.Status.QUEUED, input_hash="", input_preview="", prompt_version="")
+    explain_document_task.delay(str(document_id), str(request.user.id))
+    return {"job_id": str(job.id), "document_id": str(document_id), "status": "queued"}
+
+
+@router.get("/documents/{document_id}/analysis")
+def get_analysis(request, document_id: UUID):
+    if not request.user.is_authenticated:
+        raise HttpError(401, "Authentication required")
+    doc = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
+    analysis = DocumentAnalysis.objects.filter(document=doc).first()
+    if not analysis:
+        return {"status": doc.status}
+    return {"status": "completed", "document_type": analysis.document_type, "summary_darija": analysis.summary_darija, "important_points": analysis.important_points_json, "extracted_entities": analysis.extracted_entities_json, "unclear_points": analysis.unclear_points_json, "next_steps": analysis.next_steps_json, "disclaimer": analysis.disclaimer_darija, "full_answer": analysis.full_response_text}
+
+
+@router.get("/assistant/jobs/{job_id}")
+def get_job_status(request, job_id: UUID):
+    if not request.user.is_authenticated:
+        raise HttpError(401, "Authentication required")
+    job = get_object_or_404(AIJob, id=job_id, user=request.user)
+    return {"job_id": str(job.id), "status": job.status, "result_available": bool(job.result_json), "error_message": job.error_message or ""}
