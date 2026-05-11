@@ -895,3 +895,332 @@ Add tests for:
 - Magic login token cannot be reused if one-time storage is implemented.
 - Unsafe next_url is rejected.
 
+## Milestone 5 — Pasted Text Explanation
+
+Read AGENTS.md and the product documentation, especially:
+
+- product/PRD.md
+- product/API_SPEC.md
+- product/PROMPTS.md
+- product/MILESTONES.md
+- product/SECURITY_PRIVACY.md
+
+Implement Milestone 5 only: Pasted Text Explanation.
+
+Goal:
+Allow authenticated users to paste French, Arabic, formal Arabic, or mixed text and receive a structured explanation in simple Moroccan Darija. This should reuse the AIJob, PromptTemplate, wallet, and provider abstraction created in Milestone 4.
+
+Important:
+This milestone does NOT implement WhatsApp, payments, OCR, voice transcription, or generic chatbot features.
+
+Core user story:
+As a user, I can paste a piece of text into dwi.ma, spend one credit, and receive a clear Moroccan Darija explanation with key points and next steps.
+
+Requirements:
+
+1. Models
+
+Reuse existing models from assistant app:
+
+- AIJob
+- PromptTemplate
+- AIResponse
+- SafetyFlag
+
+If needed, create a new model in assistant app:
+
+TextExplanation:
+- id: UUID primary key
+- user: ForeignKey to User
+- ai_job: ForeignKey to AIJob
+- original_text
+- detected_text_type nullable
+- summary_darija
+- important_points_json
+- extracted_entities_json
+- unclear_points_json
+- next_steps_json
+- disclaimer_darija
+- full_response_text
+- created_at
+- updated_at
+
+If the existing AIJob/result_json structure is enough, you may avoid creating TextExplanation, but the result must be easy to retrieve and display.
+
+2. Prompt template
+
+Create a default active prompt template for pasted text explanation.
+
+System prompt:
+
+You are dwi.ma, a helpful Moroccan Darija assistant.
+Your role is to explain pasted text in simple Moroccan Darija for ordinary Moroccan users.
+You must only use information found in the provided text.
+Do not invent facts.
+If something is unclear, say: "هاد النقطة ما واضحةش فهاد النص."
+If the text appears legal, medical, financial, insurance-related, banking-related, administrative, or tax-related, include a short disclaimer that this is only an explanation, not professional advice.
+Use simple Moroccan Darija, not formal Arabic.
+Keep the answer practical, organized, and easy to read.
+Return valid JSON only.
+
+User prompt template:
+
+Explain this text in simple Moroccan Darija.
+
+Text content:
+{{input_text}}
+
+Return valid JSON using this exact schema:
+
+{
+  "text_type": "string",
+  "short_summary_darija": "string",
+  "important_points_darija": ["string"],
+  "extracted_entities": {
+    "names": ["string"],
+    "dates": ["string"],
+    "amounts": ["string"],
+    "deadlines": ["string"],
+    "obligations": ["string"]
+  },
+  "unclear_points_darija": ["string"],
+  "next_steps_darija": ["string"],
+  "disclaimer_darija": "string",
+  "full_answer_darija": "string"
+}
+
+Rules:
+- Return JSON only.
+- Do not wrap the JSON in markdown.
+- Do not add information that is not in the text.
+- If a field has no information, return an empty array or empty string.
+- If something is unclear, use: "هاد النقطة ما واضحةش فهاد النص."
+
+3. Service layer
+
+Create or update:
+
+apps/assistant/services/text_explanation.py
+
+Implement:
+
+explain_text(user, input_text, output_language="darija_arabic")
+
+Behavior:
+1. Validate authenticated user.
+2. Validate input text is not empty.
+3. Validate input text length.
+4. Check wallet balance.
+5. Reserve 1 credit.
+6. Create AIJob with job_type=text_explanation.
+7. Load active text explanation prompt.
+8. Call LLM provider.
+9. Parse JSON.
+10. Retry once if JSON is invalid.
+11. Save AIResponse.
+12. Save TextExplanation if model is created, or save structured result in AIJob.result_json.
+13. Mark AIJob completed.
+14. Charge reserved usage only after valid result is saved.
+15. Return structured explanation.
+
+Failure behavior:
+- If text is empty, return validation error.
+- If text is too long, return friendly error.
+- If user has insufficient credits, do not create paid job.
+- If LLM fails, mark AIJob failed.
+- If LLM fails, fail the reserved usage and do not deduct credits.
+- If JSON parsing fails after retry, mark AIJob failed and do not deduct credits.
+- Do not expose raw technical errors to the user.
+
+Recommended validation:
+- Minimum text length: 10 characters.
+- Maximum text length: configurable setting:
+  TEXT_EXPLANATION_MAX_CHARS=12000
+
+4. API endpoints using Django Ninja
+
+Add endpoints:
+
+POST /api/assistant/explain-text
+
+Input:
+
+{
+  "text": "string",
+  "output_language": "darija_arabic"
+}
+
+Response:
+
+{
+  "job_id": "uuid",
+  "status": "queued"
+}
+
+Rules:
+- Requires authenticated user.
+- Requires enough credits.
+- Starts Celery task if existing async job pattern is available.
+- Otherwise use the same sync/async pattern used in Milestone 4.
+
+GET /api/assistant/text-explanations/{job_id}
+
+Response:
+
+{
+  "job_id": "uuid",
+  "status": "completed",
+  "text_type": "...",
+  "summary_darija": "...",
+  "important_points": [],
+  "extracted_entities": {},
+  "unclear_points": [],
+  "next_steps": [],
+  "disclaimer": "...",
+  "full_answer": "..."
+}
+
+If there is already a generic GET /api/assistant/jobs/{job_id}, update it to support text_explanation results.
+
+5. Celery task
+
+Create or update:
+
+apps/assistant/tasks.py
+
+Task:
+
+explain_text_task(user_id, input_text, options=None)
+
+Behavior:
+- Create or continue AIJob according to the existing pattern.
+- Set status to running.
+- Run text explanation service.
+- Save results.
+- Charge credits only on success.
+- Fail usage on error.
+- Store safe error message.
+- Never deduct credits on failed explanation.
+
+6. PWA templates
+
+Create or update mobile-first Bootstrap templates:
+
+- assistant/explain_text_form.html
+- assistant/text_processing.html
+- assistant/text_result.html
+
+User flow:
+1. User opens “شرح ليا نص”.
+2. User sees text area.
+3. User pastes text.
+4. Page shows clear note: this will use 1 credit.
+5. User submits.
+6. Processing page polls job status with HTMX if async.
+7. Result page displays structured explanation.
+
+Result page should show:
+- Text type
+- Short summary
+- Important points
+- Names/dates/amounts/deadlines/obligations
+- Unclear points
+- What to do next
+- Disclaimer
+- Full answer
+- Buttons:
+  - Copy result
+  - Explain another text
+  - Back to dashboard
+
+Use simple Darija UI labels where appropriate.
+
+Suggested labels:
+- “شرح ليا نص”
+- “لسق النص هنا”
+- “هاد العملية غادي تستعمل 1 كريدي”
+- “شرح النص”
+- “نسخ النتيجة”
+- “شرح نص آخر”
+
+7. Navigation/dashboard
+
+Update dashboard to include a visible card/button:
+
+“شرح ليا نص”
+
+Description:
+“لسق نص بالفرنسية ولا العربية، و dwi.ma يشرحو ليك بدارجة بسيطة.”
+
+8. Admin
+
+If TextExplanation model is created, register it in admin.
+
+Admin should show:
+- user
+- ai_job
+- detected_text_type
+- created_at
+- updated_at
+
+Also ensure AIJob admin can filter by:
+- job_type=text_explanation
+- status
+- provider
+- model
+- created_at
+
+9. Tests
+
+Add tests for:
+
+- Authenticated user can submit pasted text.
+- Anonymous user cannot access pasted text explanation view.
+- Empty text is rejected.
+- Very short text is rejected.
+- Text above max length is rejected.
+- User with insufficient credits cannot start explanation.
+- Successful text explanation creates AIJob.
+- Successful text explanation creates AIResponse.
+- Successful text explanation saves structured result.
+- Successful text explanation deducts exactly 1 credit.
+- Failed LLM call does not deduct credits.
+- Invalid JSON response retries once.
+- Invalid JSON after retry marks job failed.
+- Failed job does not charge wallet.
+- API explain-text endpoint returns queued/running status.
+- Text result endpoint returns completed explanation.
+- Dashboard includes “شرح ليا نص” entry.
+- Admin model is registered if TextExplanation model exists.
+
+10. Constraints
+
+Do not implement:
+- WhatsApp sending.
+- WhatsApp webhook.
+- Digital Virgo payments.
+- OCR or vision document understanding.
+- Speech-to-text.
+- Message generation.
+- Generic chatbot.
+- Inwi support mode.
+- Native app.
+
+This milestone is only about:
+- Pasted text input.
+- AI explanation in Darija.
+- Structured result display.
+- Safe wallet charging.
+- PWA pages for text explanation.
+
+11. After implementation
+
+Show:
+- Files changed
+- New models if any
+- New services
+- New API endpoints
+- New templates
+- New tests
+- How to run migrations
+- How to run tests
