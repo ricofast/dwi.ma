@@ -61,3 +61,32 @@ class Profile(models.Model):
     onboarding_completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class PhoneIdentity(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="phone_identities")
+    phone_number = models.CharField(max_length=20, unique=True)
+    is_verified = models.BooleanField(default=False)
+    verified_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class WhatsAppIdentity(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="whatsapp_identities")
+    wa_id = models.CharField(max_length=64, unique=True)
+    phone_number = models.CharField(max_length=20, null=True, blank=True)
+    display_name = models.CharField(max_length=255, null=True, blank=True)
+    is_linked = models.BooleanField(default=False)
+    linked_at = models.DateTimeField(null=True, blank=True)
+    last_seen_at = models.DateTimeField(null=True, blank=True)
+    raw_profile = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["user"]),
+            models.Index(fields=["created_at"]),
+        ]
