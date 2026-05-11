@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-3">
+  <h1 class="h5">نتيجة الاستخراج</h1>
+  {% if document.status == 'extracted' and document.extracted_text %}
+    <div class="alert alert-success">تم استخراج النص بنجاح</div>
+    <pre class="small border rounded p-2" style="max-height: 300px; overflow:auto;">{{ document.extracted_text.text|truncatechars:1200 }}</pre>
+  {% elif document.status == 'extraction_failed' %}
+    <div class="alert alert-warning">ما قدرناش نخرجو النص من هاد الوثيقة دابا. جرب وثيقة PDF فيها نص واضح.</div>
+  {% else %}
+    <div class="alert alert-secondary">الوثيقة مازال كتتعالج.</div>
+  {% endif %}
+</div>
+{% endblock %}
