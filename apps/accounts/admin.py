@@ -8,6 +8,7 @@ from .models import Profile, User
 class UserAdmin(BaseUserAdmin):
     ordering = ("phone_number",)
     list_display = ("phone_number", "email", "full_name", "is_staff", "is_active")
+    readonly_fields = ('date_joined',)
     fieldsets = (
         (None, {"fields": ("phone_number", "password")}),
         ("Personal info", {"fields": ("full_name", "email")}),
