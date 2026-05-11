@@ -22,7 +22,7 @@ class ExplainTextIn(BaseModel):
 @router.post("/assistant/explain-text")
 def explain_text_endpoint(request, payload: ExplainTextIn):
     require_auth(request)
-    print(payload.text.strip())
+    print("text to explain:", payload.text.strip())
     if not payload.text or len(payload.text.strip()) < 10:
         raise HttpError(400, "النص خاص يكون فيه على الأقل 10 حروف")
     if not can_spend(request.user, 1):
