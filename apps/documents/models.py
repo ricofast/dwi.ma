@@ -72,3 +72,19 @@ class ExtractedText(models.Model):
     metadata = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class DocumentAnalysis(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    document = models.OneToOneField(UploadedDocument, on_delete=models.CASCADE, related_name="analysis")
+    ai_job = models.ForeignKey("assistant.AIJob", on_delete=models.CASCADE, related_name="document_analyses")
+    document_type = models.CharField(max_length=128, blank=True, default="")
+    summary_darija = models.TextField(blank=True, default="")
+    important_points_json = models.JSONField(default=list, blank=True)
+    extracted_entities_json = models.JSONField(default=dict, blank=True)
+    unclear_points_json = models.JSONField(default=list, blank=True)
+    next_steps_json = models.JSONField(default=list, blank=True)
+    disclaimer_darija = models.TextField(blank=True, default="")
+    full_response_text = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
