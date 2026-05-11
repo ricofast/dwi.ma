@@ -127,6 +127,9 @@ class ExplainIn(BaseModel):
 
 
 @router.post("/documents/{document_id}/explain")
+@router.post("/documents/{document_id}/explain/")
+@router.get("/documents/{document_id}/explain")
+@router.get("/documents/{document_id}/explain/")
 def explain_doc(request, document_id: UUID, payload: ExplainIn):
     if not request.user.is_authenticated:
         raise HttpError(401, "Authentication required")
