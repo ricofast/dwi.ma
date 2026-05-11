@@ -2,6 +2,7 @@ from django.urls import path
 from ninja import NinjaAPI
 
 from apps.documents.api import router as documents_router
+from apps.assistant.api import router as assistant_router
 from apps.wallet.api import router as wallet_router
 
 api = NinjaAPI(title="dwi.ma API")
@@ -14,6 +15,7 @@ def health(request):
 
 api.add_router("", wallet_router)
 api.add_router("", documents_router)
+api.add_router("", assistant_router)
 
 urlpatterns = [
     path("", api.urls),
