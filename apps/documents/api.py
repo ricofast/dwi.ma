@@ -1,6 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
+from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from ninja import File, Form, Router
@@ -70,6 +71,8 @@ def get_document(request, document_id: UUID):
 
 
 def _extract_document(request, document_id: UUID):
+@router.post("/documents/{document_id}/extract")
+def extract_document(request, document_id: UUID):
     if not request.user.is_authenticated:
         raise HttpError(401, "Authentication required")
     doc = get_object_or_404(UploadedDocument, id=document_id, user=request.user)

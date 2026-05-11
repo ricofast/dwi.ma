@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-3">
+  <h1 class="h4">شرح ليا وثيقة</h1>
+  <p class="small text-muted">كنوافق أن dwi.ma يعالج هاد الوثيقة باش يشرحها ليا.</p>
+  <div class="alert alert-info">هاد الخدمة غير للمساعدة وماشي استشارة قانونية أو طبية أو مالية رسمية.</div>
+  <form class="card card-body" method="post" enctype="multipart/form-data" action="/api/documents/upload">
+    <div class="mb-3">
+      <label class="form-label">الوثيقة</label>
+      <input class="form-control" type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.webp" required>
+    </div>
+    <div class="form-check mb-3">
+      <input class="form-check-input" type="checkbox" name="consent_accepted" value="true" id="consent" required>
+      <label class="form-check-label" for="consent">وافقت على المعالجة</label>
+    </div>
+    <input type="hidden" name="source" value="pwa">
+    <button class="btn btn-primary w-100" type="submit">رفع الوثيقة</button>
+  </form>
+</div>
+{% endblock %}

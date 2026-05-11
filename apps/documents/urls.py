@@ -2,6 +2,8 @@ from django.urls import path
 
 from .views import document_detail, extraction_result, upload_page
 
+app_name = "document"
+
 urlpatterns = [
     path("upload/", upload_page, name="document_upload"),
     path("<uuid:document_id>/", document_detail, name="document_detail"),
