@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>شرح ليا نص</h1>
+<p>هاد العملية غادي تستعمل 1 كريدي</p>
+<form method="post" action="" class="d-grid gap-2">
+  {% csrf_token %}
+  <label for="id_text">لسق النص هنا</label>
+  <textarea id="id_text" name="text" class="form-control" rows="8" required>{{ request.POST.text }}</textarea>
+  <button class="btn btn-primary">شرح النص</button>
+</form>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>نتيجة شرح النص</h1>
+<p><strong>النوع:</strong> {{ result.text_type }}</p>
+<p><strong>الخلاصة:</strong> {{ result.short_summary_darija }}</p>
+<p><strong>تنبيه:</strong> {{ result.disclaimer_darija }}</p>
+<pre id="full-answer">{{ result.full_answer_darija }}</pre>
+<a class="btn btn-outline-secondary" href="#" onclick="navigator.clipboard.writeText(document.getElementById('full-answer').innerText)">نسخ النتيجة</a>
+<a class="btn btn-primary" href="{% url 'assistant:explain_text_form' %}">شرح نص آخر</a>
+<a class="btn btn-link" href="{% url 'dashboard' %}">Back to dashboard</a>
+{% endblock %}

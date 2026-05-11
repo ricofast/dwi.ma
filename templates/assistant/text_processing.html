@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>كنعالجو النص...</h1>
+<p>تسنى شوية.</p>
+{% if job.status == 'completed' %}
+  <script>window.location.href="{% url 'assistant:text_result' job.id %}";</script>
+{% else %}
+  <meta http-equiv="refresh" content="2">
+{% endif %}
+{% endblock %}

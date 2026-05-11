@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import AIJob, AIResponse, PromptTemplate, SafetyFlag
+from .models import AIJob, AIResponse, PromptTemplate, SafetyFlag, TextExplanation
 
 
 @admin.register(AIJob)
@@ -12,3 +12,9 @@ class AIJobAdmin(admin.ModelAdmin):
 admin.site.register(PromptTemplate)
 admin.site.register(AIResponse)
 admin.site.register(SafetyFlag)
+
+
+@admin.register(TextExplanation)
+class TextExplanationAdmin(admin.ModelAdmin):
+    list_display = ("user", "ai_job", "detected_text_type", "created_at", "updated_at")
+    list_filter = ("created_at", "updated_at")

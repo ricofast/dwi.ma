@@ -69,3 +69,20 @@ class SafetyFlag(models.Model):
     flag_type = models.CharField(max_length=32, choices=FlagType.choices)
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class TextExplanation(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="text_explanations")
+    ai_job = models.ForeignKey(AIJob, on_delete=models.CASCADE, related_name="text_explanations")
+    original_text = models.TextField()
+    detected_text_type = models.CharField(max_length=128, null=True, blank=True)
+    summary_darija = models.TextField(blank=True, default="")
+    important_points_json = models.JSONField(default=list, blank=True)
+    extracted_entities_json = models.JSONField(default=dict, blank=True)
+    unclear_points_json = models.JSONField(default=list, blank=True)
+    next_steps_json = models.JSONField(default=list, blank=True)
+    disclaimer_darija = models.TextField(blank=True, default="")
+    full_response_text = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
