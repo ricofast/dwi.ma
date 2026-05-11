@@ -69,7 +69,7 @@ def get_document(request, document_id: UUID):
     }
 
 
-@router.post("/documents/extract/{document_id}/")
+@router.post("/documents/{document_id}/extract")
 def extract_document(request, document_id: UUID):
     if not request.user.is_authenticated:
         raise HttpError(401, "Authentication required")

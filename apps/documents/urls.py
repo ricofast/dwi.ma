@@ -2,7 +2,7 @@ from django.urls import path
 
 from .views import document_detail, extraction_result, upload_page
 
-# app_name = "documents"
+app_name = "document"
 
 urlpatterns = [
     path("upload/", upload_page, name="document_upload"),
