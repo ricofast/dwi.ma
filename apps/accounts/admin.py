@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import Profile, User
+from .models import PhoneIdentity, Profile, User, WhatsAppIdentity
 
 
 @admin.register(User)
@@ -22,3 +22,6 @@ class UserAdmin(BaseUserAdmin):
 
 
 admin.site.register(Profile)
+
+admin.site.register(PhoneIdentity)
+admin.site.register(WhatsAppIdentity)
