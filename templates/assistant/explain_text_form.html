@@ -2,10 +2,10 @@
 {% block content %}
 <h1>شرح ليا نص</h1>
 <p>هاد العملية غادي تستعمل 1 كريدي</p>
-<form method="post" action="/api/assistant/explain-text" class="d-grid gap-2">
+<form method="post" action="" class="d-grid gap-2">
   {% csrf_token %}
-  <label>لسق النص هنا</label>
-  <textarea name="text" class="form-control" rows="8"></textarea>
+  <label for="id_text">لسق النص هنا</label>
+  <textarea id="id_text" name="text" class="form-control" rows="8" required>{{ request.POST.text }}</textarea>
   <button class="btn btn-primary">شرح النص</button>
 </form>
 {% endblock %}
