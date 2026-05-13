@@ -2755,3 +2755,587 @@ Show:
 - How to run payment tests
 - How to test with mock payment provider
 - What details are still needed from Digital Virgo production documentation
+
+
+## Milestone 9 — Privacy, Admin, and Polish
+
+Read AGENTS.md and the product documentation, especially:
+
+- product/PRD.md
+- product/SECURITY_PRIVACY.md
+- product/MILESTONES.md
+- product/DATA_MODEL.md
+- product/API_SPEC.md
+- product/PAYMENT_SPEC.md
+- product/WHATSAPP_FLOWS.md
+
+Implement Milestone 9 only: Privacy, Deletion, Safety, Admin Polish, and Production Readiness Basics.
+
+Goal:
+Make the dwi.ma MVP safer and cleaner before real-user testing. Implement consent logging, document/audio deletion, user feedback, admin retry/refund tools, safe error handling, retention settings, and operational admin visibility.
+
+Important:
+This milestone should polish and harden existing flows. Do not add new major product features.
+
+Existing MVP features include:
+- Document upload and extraction
+- AI document explanation
+- Pasted text explanation
+- WhatsApp companion
+- Voice-to-message generation
+- Wallet and credits
+- Digital Virgo/mock payment integration
+
+Milestone 9 should improve privacy, safety, admin operations, and reliability across these existing features.
+
+Requirements:
+
+1. Consent logging
+
+Create or complete ConsentLog in accounts or core app.
+
+ConsentLog fields:
+- id: UUID primary key
+- user nullable
+- phone_number nullable
+- consent_type choices:
+  - privacy_policy
+  - document_processing
+  - audio_processing
+  - whatsapp_optin
+  - payment_terms
+  - marketing
+- consent_text_version
+- consent_text_snapshot optional text field
+- accepted boolean
+- ip_address nullable
+- user_agent nullable
+- source choices:
+  - pwa
+  - whatsapp
+  - admin
+  - api
+- created_at
+
+Service:
+
+apps/accounts/services/consent.py or apps/core/services/consent.py
+
+Implement:
+- log_consent(user=None, phone_number=None, consent_type, accepted=True, source="pwa", request=None)
+- has_required_consent(user, consent_type)
+- get_latest_consent(user, consent_type)
+
+Rules:
+- Document processing requires document_processing consent.
+- Audio processing requires audio_processing consent.
+- WhatsApp messaging requires whatsapp_optin consent when applicable.
+- Payment start requires payment_terms consent if payment flow includes terms checkbox.
+- Consent should be logged with IP/user agent when request is available.
+
+2. Privacy notices in PWA
+
+Update forms/pages to include privacy/consent checkboxes where appropriate:
+
+Document upload page:
+- Requires document_processing consent.
+- Text:
+  "كنوافق أن dwi.ma يعالج هاد الوثيقة باش يشرحها ليا. نقدر نمسحها من بعد."
+
+Audio upload page:
+- Requires audio_processing consent.
+- Text:
+  "كنوافق أن dwi.ma يعالج هاد التسجيل الصوتي باش يحولو لنص ويكتب ليا الرسالة."
+
+Payment page:
+- Requires payment_terms consent.
+- Text:
+  "كنوافق على شروط الأداء واستعمال الكريديات."
+
+WhatsApp settings/linking page:
+- Requires whatsapp_optin consent.
+- Text:
+  "كنوافق نتوصل بالنتائج والتنبيهات فواتساب."
+
+Rules:
+- If user does not accept required consent, block the action with a friendly error.
+- Store the consent log when accepted.
+
+3. Delete document feature
+
+Complete or improve document deletion.
+
+Service:
+
+apps/documents/services/deletion.py
+
+Implement:
+- delete_document_for_user(document, user)
+- admin_delete_document(document, admin_user, reason=None)
+
+Behavior:
+- User can delete only their own document.
+- Mark UploadedDocument status as deleted.
+- Set deleted_at.
+- Delete physical file from storage if supported.
+- Keep minimal metadata for audit if needed.
+- Delete or clear extracted text if privacy settings require it.
+- Keep payment/wallet records unchanged.
+- Create AuditLog entry.
+
+API:
+DELETE /api/documents/{document_id}
+
+PWA:
+- Add “مسح الوثيقة” button on document detail/result page.
+- Ask for confirmation before deletion.
+- Show success message after deletion.
+
+Tests:
+- User can delete own document.
+- User cannot delete another user’s document.
+- Deleted document cannot be processed again.
+- Physical file deletion is attempted.
+- Audit log is created.
+
+4. Delete audio feature
+
+Complete or improve audio deletion.
+
+Service:
+
+apps/audio/services/deletion.py
+
+Implement:
+- delete_voice_note_for_user(voice_note, user)
+- admin_delete_voice_note(voice_note, admin_user, reason=None)
+
+Behavior:
+- User can delete only their own voice note.
+- Mark VoiceNote status as deleted.
+- Set deleted_at.
+- Delete physical audio file if supported.
+- Optionally clear transcript depending on retention setting.
+- Create AuditLog entry.
+
+API:
+DELETE /api/audio/{voice_note_id}
+
+PWA:
+- Add “مسح التسجيل” button on voice/message result page.
+
+Tests:
+- User can delete own voice note.
+- User cannot delete another user’s voice note.
+- Deleted voice note cannot be transcribed or used for message generation.
+- Audit log is created.
+
+5. Retention settings
+
+Add settings:
+
+DOCUMENT_ORIGINAL_RETENTION_DAYS=30
+AUDIO_ORIGINAL_RETENTION_DAYS=30
+DELETE_EXTRACTED_TEXT_ON_DOCUMENT_DELETE=True
+DELETE_TRANSCRIPT_ON_AUDIO_DELETE=True
+DELETE_AI_RESULTS_ON_SOURCE_DELETE=False
+
+Create management commands:
+
+python manage.py cleanup_expired_documents
+python manage.py cleanup_expired_audio
+
+Behavior:
+- Find documents/audio older than retention period.
+- Delete physical original files.
+- Keep or clear extracted text/transcript based on settings.
+- Mark cleanup metadata.
+- Log actions.
+
+Tests:
+- Expired document files are cleaned.
+- Expired audio files are cleaned.
+- Non-expired files are not cleaned.
+- Settings are respected.
+
+6. Audit log
+
+Create or complete AuditLog in core app.
+
+AuditLog fields:
+- id: UUID primary key
+- actor nullable
+- action
+- target_type
+- target_id
+- metadata_json JSON field
+- ip_address nullable
+- user_agent nullable
+- created_at
+
+Service:
+
+apps/core/services/audit.py
+
+Implement:
+- log_action(actor=None, action, target=None, metadata=None, request=None)
+
+Use audit log for:
+- Document deletion
+- Audio deletion
+- Admin credit adjustment
+- Admin refund
+- Payment callback processing failure
+- AI job retry
+- User account linking to WhatsApp
+- Consent accepted
+
+7. User feedback on AI results
+
+Create or complete UserFeedback in assistant app.
+
+Fields:
+- id: UUID primary key
+- user
+- ai_job
+- rating choices:
+  - helpful
+  - unclear
+  - wrong
+  - unsafe
+- comment nullable
+- created_at
+
+API:
+POST /api/assistant/jobs/{job_id}/feedback
+
+Input:
+{
+  "rating": "helpful",
+  "comment": "optional"
+}
+
+Rules:
+- User can only rate own AI jobs.
+- One feedback per user per job, or update existing feedback.
+- Feedback does not affect credits.
+
+PWA:
+Add feedback buttons to:
+- Document analysis result
+- Text explanation result
+- Message generation result
+
+Darija labels:
+- “عاوناتني”
+- “ما واضحةش”
+- “فيها خطأ”
+- “خاصها مراجعة”
+
+Tests:
+- User can rate own result.
+- User cannot rate another user’s job.
+- Duplicate feedback updates existing record or is prevented.
+- Feedback appears in admin.
+
+8. Safe error handling
+
+Create centralized safe error messages for user-facing failures.
+
+Service:
+
+apps/core/services/errors.py
+
+Implement:
+- get_safe_error_message(error_code)
+- map_exception_to_safe_message(exception)
+
+Examples:
+
+DOCUMENT_UNREADABLE:
+"سمح ليا، ما قدرتش نقرا هاد الوثيقة مزيان. جرب تصيفط نسخة أوضح."
+
+AI_FAILED:
+"وقع مشكل تقني فاش كنوجد الجواب. ما نقصناش ليك الكريدي."
+
+INSUFFICIENT_CREDITS:
+"ما بقاوش عندك الكريديات الكافية. شحن الرصيد باش تكمل."
+
+PAYMENT_FAILED:
+"ما تكملش الأداء. جرب مرة أخرى أو اختار طريقة أخرى."
+
+WHATSAPP_SEND_FAILED:
+"ما قدرناش نصيفطو النتيجة للواتساب دابا. تقدر تشوفها فالحساب ديالك."
+
+Rules:
+- Do not expose provider stack traces to users.
+- Store technical error in logs/admin fields.
+- Show safe error in UI/API.
+
+Update existing flows to use safe messages where appropriate.
+
+9. Admin retry tools
+
+Add admin actions for AIJob and related jobs:
+
+AIJob admin actions:
+- Retry failed AI job
+- Mark failed job as reviewed
+- Export selected AI jobs as CSV if simple
+
+Document admin actions:
+- Retry extraction for failed extraction
+- Retry explanation for failed explanation if extracted text exists
+- Delete selected documents with audit log
+
+Audio admin actions:
+- Retry transcription
+- Retry message generation if transcript exists
+- Delete selected audio with audit log
+
+Payment admin actions:
+- Retry processing selected webhook event
+- Mark mock transaction paid in DEBUG only
+- Do not allow unsafe production manual paid status without explicit guard
+
+Wallet admin actions:
+- Add credits with required reason
+- Remove credits with required reason and balance check
+- Refund usage event
+
+Rules:
+- Admin actions must create AuditLog entries.
+- Dangerous actions should be guarded by DEBUG or explicit confirmation where appropriate.
+- No silent balance changes.
+
+10. Admin dashboard polish
+
+Improve Django admin list displays and filters for:
+
+- Users
+- Wallets
+- Usage events
+- Payment transactions
+- Payment webhook events
+- Uploaded documents
+- Extracted text
+- Document analyses
+- Voice notes
+- Transcription jobs
+- AI jobs
+- AI responses
+- WhatsApp inbound/outbound messages
+- WhatsApp webhook events
+- Consent logs
+- Audit logs
+- User feedback
+
+Add:
+- search_fields where useful
+- list_filter where useful
+- readonly_fields for raw payloads and timestamps
+- date_hierarchy where useful
+
+11. Health check endpoint
+
+Add lightweight endpoint:
+
+GET /api/health/
+
+Response:
+{
+  "status": "ok",
+  "database": "ok",
+  "redis": "ok|unknown",
+  "timestamp": "..."
+}
+
+Rules:
+- Do not expose secrets.
+- Do not expose detailed infrastructure errors to public response.
+- Log internal errors.
+
+Optional:
+GET /api/health/admin/
+Staff-only, more detailed health info.
+
+12. Rate limiting placeholders
+
+Add basic rate limiting or clear TODO hooks.
+
+If django-ratelimit or similar is already installed, use it.
+
+Apply basic limits to:
+- Document upload
+- Text explanation
+- Audio upload
+- Payment start
+- WhatsApp webhook processing if appropriate
+
+If not installing a package, add a simple service placeholder and TODO comments.
+
+Rules:
+- Do not overcomplicate.
+- The goal is to prepare the code for abuse prevention.
+
+13. Security hardening checklist
+
+Update settings or documentation:
+
+- Ensure DEBUG=False guidance for production.
+- Ensure ALLOWED_HOSTS required.
+- Ensure CSRF enabled for web forms.
+- Ensure secure cookies documented:
+  - SESSION_COOKIE_SECURE=True
+  - CSRF_COOKIE_SECURE=True
+- Ensure uploaded files are not publicly exposed.
+- Ensure secrets are in environment variables.
+- Ensure webhook signature verification is documented.
+- Ensure payment callback idempotency is documented.
+
+Create or update:
+
+product/SECURITY_PRIVACY.md
+
+Add:
+- Data retention policy
+- Consent policy
+- Deletion behavior
+- Payment callback security
+- WhatsApp webhook security
+- AI safety/disclaimer rules
+
+14. Terms and privacy pages
+
+Create or update templates:
+
+- pages/privacy.html
+- pages/terms.html
+- pages/support.html
+
+Content can be draft/non-legal but clear.
+
+Privacy page should mention:
+- Documents/audio are processed to generate explanations/messages.
+- User can delete uploaded files.
+- Data is not used to train models by default.
+- Some data may be sent to AI providers for processing.
+- Payment data is handled through payment provider.
+- WhatsApp messages may be processed when user interacts through WhatsApp.
+
+Terms page should mention:
+- dwi.ma provides explanations, not professional advice.
+- Legal, medical, financial, and administrative outputs are informational.
+- Credits are consumed only when successful result is generated.
+- Refund policy placeholder.
+
+Support page:
+- Contact email placeholder.
+- Basic FAQ.
+
+15. Result disclaimers
+
+Ensure every high-risk result page displays disclaimer if applicable.
+
+Apply to:
+- Document analysis
+- Text explanation
+- Message generation if professional/legal/financial context is detected
+
+Default disclaimer:
+"ملاحظة: هاد الشرح غير باش يعاونك تفهم، وماشي استشارة قانونية أو طبية أو مالية أو إدارية رسمية."
+
+16. Tests
+
+Add tests for:
+
+Consent:
+- Required consent blocks document upload if missing.
+- Document consent is logged.
+- Audio consent is logged.
+- Payment terms consent is logged.
+- WhatsApp opt-in consent is logged.
+
+Deletion:
+- User can delete own document.
+- User cannot delete another user’s document.
+- Deleted document cannot be processed.
+- User can delete own audio.
+- User cannot delete another user’s audio.
+- Deleted audio cannot be processed.
+
+Retention:
+- Cleanup command removes expired document originals.
+- Cleanup command removes expired audio originals.
+- Cleanup respects retention settings.
+
+Audit:
+- Audit log is created for deletion.
+- Audit log is created for admin credit adjustment.
+- Audit log is created for retry actions.
+
+Feedback:
+- User can submit feedback for own AI job.
+- User cannot submit feedback for another user’s AI job.
+- Duplicate feedback behavior is correct.
+
+Safe errors:
+- LLM failure returns safe message.
+- Payment failure returns safe message.
+- WhatsApp send failure returns safe message.
+- Technical details are not shown in API response.
+
+Admin:
+- Key models are registered in admin.
+- Admin retry action exists for failed AIJob.
+- Admin refund/credit adjustment creates audit log.
+
+Health:
+- Health endpoint returns ok.
+- Health endpoint does not expose secrets.
+
+Security:
+- Unsafe redirects remain blocked.
+- Protected views still require login.
+- Webhooks still do not require browser login but use provider verification if configured.
+
+17. Constraints
+
+Do not implement:
+- New AI product features.
+- Inwi white-label mode.
+- Native mobile app.
+- New payment provider.
+- Subscription billing.
+- Full production legal policy.
+- Advanced analytics dashboard.
+- Full RAG system.
+- OCR if not already implemented.
+- Text-to-speech.
+
+This milestone is only about:
+- Privacy
+- Consent
+- Deletion
+- Retention
+- Audit logging
+- Feedback
+- Safe error handling
+- Admin polish
+- Basic health/security readiness
+
+18. After implementation
+
+Show:
+- Files changed
+- New models
+- New services
+- New admin actions
+- New endpoints
+- New templates/pages
+- New tests
+- New settings
+- How to run migrations
+- How to run cleanup commands
+- How to run privacy/security tests
+- Any manual production TODOs remaining
