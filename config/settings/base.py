@@ -122,3 +122,9 @@ WHATSAPP_APP_SECRET = env.str("WHATSAPP_APP_SECRET", default="")
 WHATSAPP_API_VERSION = env.str("WHATSAPP_API_VERSION", default="v23.0")
 WHATSAPP_DEFAULT_COUNTRY_CODE = env.str("WHATSAPP_DEFAULT_COUNTRY_CODE", default="212")
 SITE_URL = env.str("SITE_URL", default="http://localhost:8000")
+
+AUDIO_MAX_UPLOAD_MB = env.int("AUDIO_MAX_UPLOAD_MB", default=15)
+ALLOWED_AUDIO_EXTENSIONS = [e.strip() for e in env.str("ALLOWED_AUDIO_EXTENSIONS", default="mp3,mp4,m4a,wav,webm,ogg,opus").split(",") if e.strip()]
+TRANSCRIPTION_PROVIDER = env.str("TRANSCRIPTION_PROVIDER", default="mock")
+TRANSCRIPTION_MODEL = env.str("TRANSCRIPTION_MODEL", default="mock-transcribe")
+OPENAI_API_KEY = env.str("OPENAI_API_KEY", default="")

@@ -86,3 +86,30 @@ class TextExplanation(models.Model):
     full_response_text = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class MessageGeneration(models.Model):
+    class TargetFormat(models.TextChoices):
+        PROFESSIONAL_FRENCH_EMAIL = "professional_french_email", "Professional French Email"
+        PROFESSIONAL_ARABIC_MESSAGE = "professional_arabic_message", "Professional Arabic Message"
+        POLISHED_DARIJA_WHATSAPP = "polished_darija_whatsapp", "Polished Darija WhatsApp"
+        SHORT_REPLY = "short_reply", "Short Reply"
+
+    class Tone(models.TextChoices):
+        NEUTRAL = "neutral", "Neutral"
+        POLITE = "polite", "Polite"
+        POLITE_FIRM = "polite_firm", "Polite Firm"
+        FRIENDLY = "friendly", "Friendly"
+        FORMAL = "formal", "Formal"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="message_generations")
+    ai_job = models.ForeignKey(AIJob, on_delete=models.CASCADE, related_name="message_generations")
+    voice_note = models.ForeignKey("audio.VoiceNote", null=True, blank=True, on_delete=models.SET_NULL, related_name="message_generations")
+    transcription_job = models.ForeignKey("audio.TranscriptionJob", null=True, blank=True, on_delete=models.SET_NULL, related_name="message_generations")
+    input_text = models.TextField()
+    target_format = models.CharField(max_length=64, choices=TargetFormat.choices)
+    tone = models.CharField(max_length=32, choices=Tone.choices, default=Tone.POLITE)
+    generated_message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

@@ -16,6 +16,9 @@ def route_inbound_message(inbound_message):
         return send_text_explanation_prompt(inbound_message.wa_id)
     if "شرح وثيقة" in (inbound_message.text_body or ""):
         return send_document_upload_link(inbound_message.wa_id, "http://localhost:8000/document/upload/")
+    if "نكتب ليك رسالة" in (inbound_message.text_body or ""):
+        # TODO: support direct whatsapp audio media processing in future milestone
+        return send_document_upload_link(inbound_message.wa_id, "http://localhost:8000/assistant/generate-message/")
     if "الرصيد" in (inbound_message.text_body or ""):
         if not inbound_message.user:
             return send_account_link_message(inbound_message.wa_id)
