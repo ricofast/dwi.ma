@@ -90,3 +90,31 @@ class WhatsAppIdentity(models.Model):
             models.Index(fields=["user"]),
             models.Index(fields=["created_at"]),
         ]
+
+
+class ConsentLog(models.Model):
+    class ConsentType(models.TextChoices):
+        PRIVACY_POLICY = "privacy_policy", "Privacy Policy"
+        DOCUMENT_PROCESSING = "document_processing", "Document Processing"
+        AUDIO_PROCESSING = "audio_processing", "Audio Processing"
+        WHATSAPP_OPTIN = "whatsapp_optin", "WhatsApp Opt-in"
+        PAYMENT_TERMS = "payment_terms", "Payment Terms"
+        MARKETING = "marketing", "Marketing"
+
+    class Source(models.TextChoices):
+        PWA = "pwa", "PWA"
+        WHATSAPP = "whatsapp", "WhatsApp"
+        ADMIN = "admin", "Admin"
+        API = "api", "API"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="consent_logs")
+    phone_number = models.CharField(max_length=20, null=True, blank=True)
+    consent_type = models.CharField(max_length=32, choices=ConsentType.choices)
+    consent_text_version = models.CharField(max_length=32, default="v1")
+    consent_text_snapshot = models.TextField(blank=True, default="")
+    accepted = models.BooleanField(default=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(null=True, blank=True)
+    source = models.CharField(max_length=16, choices=Source.choices, default=Source.PWA)
+    created_at = models.DateTimeField(auto_now_add=True)
