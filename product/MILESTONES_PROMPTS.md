@@ -2290,3 +2290,468 @@ Show:
 - How to run audio/message tests
 - How to test locally with mock transcription provider
 - How to switch to OpenAI transcription provider
+
+## Milestone 8 — Digital Virgo Payments
+
+Read AGENTS.md and the product documentation, especially:
+
+- product/PRD.md
+- product/API_SPEC.md
+- product/PAYMENT_SPEC.md
+- product/MILESTONES.md
+- product/DATA_MODEL.md
+- product/SECURITY_PRIVACY.md
+
+Implement Milestone 8 only: Digital Virgo Payments and Credit Activation.
+
+Goal:
+Implement the payment system for dwi.ma so users can buy credit packages, payment transactions are created safely, Digital Virgo callbacks/webhooks can be received, and credits are activated only after verified successful payment.
+
+Important:
+The exact Digital Virgo production API may vary depending on merchant account, country, operator, and payment method. Therefore, implement a provider abstraction and a mock provider first. The Digital Virgo provider should be configurable and fail gracefully if credentials are missing.
+
+Core user story:
+As a user, when I run out of credits, I can choose a credit package, start payment, complete payment through Digital Virgo, and receive credits after the provider confirms successful payment.
+
+Requirements:
+
+1. Models
+
+Create or complete the following models in the payments app.
+
+PaymentProvider:
+- id: UUID primary key
+- code unique, for example: digital_virgo, mock
+- name
+- active boolean
+- config JSON field, blank/default dict
+- created_at
+- updated_at
+
+PaymentProduct:
+- id: UUID primary key
+- code unique
+- name
+- description
+- price_mad DecimalField
+- currency default MAD
+- credits PositiveIntegerField
+- active boolean
+- sort_order integer default 0
+- created_at
+- updated_at
+
+Suggested default products:
+- DOC_1: 5 MAD, 1 credit
+- MINI_10: 19 MAD, 10 credits
+- PRO_30: 49 MAD, 30 credits
+- SME_100: 99 MAD, 100 credits
+
+PaymentTransaction:
+- id: UUID primary key
+- user ForeignKey
+- provider ForeignKey or provider_code CharField
+- product ForeignKey
+- amount DecimalField
+- currency default MAD
+- credits_to_add PositiveIntegerField
+- status choices:
+  - pending
+  - initiated
+  - paid
+  - failed
+  - cancelled
+  - expired
+  - refunded
+- provider_transaction_id nullable, indexed
+- provider_payment_url nullable
+- provider_status nullable
+- idempotency_key unique
+- raw_request_json JSON field blank/default dict
+- raw_response_json JSON field blank/default dict
+- raw_callback_json JSON field blank/default dict
+- failure_reason nullable
+- paid_at nullable
+- created_at
+- updated_at
+
+PaymentWebhookEvent:
+- id: UUID primary key
+- provider_code
+- event_id nullable
+- provider_transaction_id nullable
+- payload_json
+- signature_valid nullable
+- processed boolean default false
+- processing_error nullable
+- received_at
+- processed_at nullable
+
+PaymentCreditGrant:
+- id: UUID primary key
+- transaction OneToOneField to PaymentTransaction
+- user ForeignKey
+- credits_granted PositiveIntegerField
+- wallet_adjustment nullable if wallet app has CreditAdjustment linkage
+- created_at
+
+2. Default products
+
+Create a data migration or management command to seed default active products:
+
+- DOC_1
+- MINI_10
+- PRO_30
+- SME_100
+
+Rules:
+- Seeding must be idempotent.
+- Running it multiple times should not create duplicates.
+- Existing products should not be overwritten unless explicitly designed.
+
+3. Payment provider abstraction
+
+Create:
+
+apps/payments/services/providers.py
+
+Implement:
+
+BasePaymentProvider:
+- start_payment(transaction, return_url=None, callback_url=None)
+- verify_callback(payload, headers=None)
+- parse_callback(payload)
+- refund(transaction, amount=None, reason=None) optional placeholder
+
+MockPaymentProvider:
+- Creates fake payment URL.
+- Can simulate success/failure.
+- Must not require credentials.
+- Used in tests.
+
+DigitalVirgoProvider:
+- Reads settings:
+  DIGITAL_VIRGO_API_BASE_URL
+  DIGITAL_VIRGO_MERCHANT_ID
+  DIGITAL_VIRGO_API_KEY
+  DIGITAL_VIRGO_WEBHOOK_SECRET
+  DIGITAL_VIRGO_CALLBACK_URL
+  DIGITAL_VIRGO_RETURN_URL
+- Builds payment initiation request.
+- Stores raw request and raw response.
+- Returns provider_transaction_id and payment_url if available.
+- Verifies callback signature if webhook secret exists.
+- Parses provider callback into normalized fields:
+  - provider_transaction_id
+  - status
+  - amount
+  - currency
+  - product_code if available
+  - phone_number if available
+  - raw payload
+- Fails gracefully if credentials are missing.
+- Do not hardcode undocumented Digital Virgo field names. Use clearly isolated mapping functions with TODO comments for final merchant documentation.
+
+Provider selection:
+- PAYMENT_PROVIDER=mock or digital_virgo
+- Default to mock in local/test environments.
+
+4. Payment service layer
+
+Create:
+
+apps/payments/services/payments.py
+
+Implement:
+
+- get_active_products()
+- create_payment_transaction(user, product_code, provider_code=None)
+- start_payment(transaction, return_url=None)
+- handle_payment_callback(provider_code, payload, headers=None)
+- mark_transaction_paid(transaction, provider_payload=None)
+- mark_transaction_failed(transaction, reason=None, provider_payload=None)
+- grant_credits_for_paid_transaction(transaction)
+- expire_old_pending_transactions()
+- get_user_transactions(user)
+
+Critical rules:
+- Use database transactions.
+- Use select_for_update when processing callbacks.
+- Payment callback processing must be idempotent.
+- A transaction must never grant credits more than once.
+- Only successful/paid provider status grants credits.
+- Failed/cancelled/expired statuses do not grant credits.
+- Repeated successful callbacks for the same transaction must not double-credit.
+- Unknown callbacks should be stored but not grant credits.
+- Credits must be added through the wallet service from Milestone 2.
+- If wallet credit grant fails, store error and do not mark webhook as fully processed.
+
+5. Callback status mapping
+
+Implement normalized status mapping.
+
+Example mapping function:
+
+normalize_provider_status(provider_status)
+
+Must return one of:
+- paid
+- failed
+- cancelled
+- expired
+- pending
+- unknown
+
+For Digital Virgo provider, use a placeholder mapping with TODO comments until real API documentation is available.
+
+Example:
+- SUCCESS, PAID, CONFIRMED -> paid
+- FAILED, ERROR, DECLINED -> failed
+- CANCELLED, CANCELED -> cancelled
+- EXPIRED, TIMEOUT -> expired
+- PENDING, INITIATED -> pending
+- otherwise -> unknown
+
+6. API endpoints using Django Ninja
+
+Add endpoints:
+
+GET /api/payments/products
+
+Response:
+{
+  "products": [
+    {
+      "code": "MINI_10",
+      "name": "Mini Pack",
+      "price_mad": "19.00",
+      "currency": "MAD",
+      "credits": 10,
+      "description": "..."
+    }
+  ]
+}
+
+POST /api/payments/start
+
+Input:
+{
+  "product_code": "MINI_10"
+}
+
+Behavior:
+- Requires authenticated user.
+- Creates PaymentTransaction.
+- Calls provider start_payment.
+- Returns transaction_id, status, payment_url if available.
+
+Response:
+{
+  "transaction_id": "uuid",
+  "status": "initiated",
+  "payment_url": "https://..."
+}
+
+GET /api/payments/transactions
+
+Returns current user’s recent transactions.
+
+GET /api/payments/transactions/{transaction_id}
+
+Returns transaction status for current user.
+
+POST /api/payments/digital-virgo/callback
+
+Behavior:
+- Does not require user login.
+- Verifies provider signature if configured.
+- Stores PaymentWebhookEvent.
+- Processes callback.
+- Returns 200 quickly after safe processing or task dispatch.
+- Must be idempotent.
+
+POST /api/payments/mock/callback
+
+Debug/test only.
+- Enabled only when DEBUG=True or PAYMENT_PROVIDER=mock.
+- Simulates payment success/failure for local development.
+
+7. PWA templates
+
+Create or update mobile-first Bootstrap templates:
+
+- payments/products.html
+- payments/start.html
+- payments/transaction_status.html
+- payments/success.html
+- payments/failed.html
+- wallet/balance.html if not already available
+
+User flow:
+1. User opens wallet/pricing page.
+2. User chooses credit package.
+3. System creates transaction.
+4. User is redirected to payment URL or sees payment instructions.
+5. After payment, user returns to success/failure page.
+6. Page shows transaction status and updated credit balance.
+
+UI labels:
+- “شحن الرصيد”
+- “اختار الباقة”
+- “كريدي”
+- “خلص بالتليفون”
+- “تم الأداء بنجاح”
+- “ما تكملش الأداء”
+- “رجع للداشبورد”
+
+8. Wallet integration
+
+On successful payment:
+- Add credits to wallet.
+- Create CreditAdjustment or equivalent wallet record.
+- Create PaymentCreditGrant.
+- Update PaymentTransaction status to paid.
+- Set paid_at.
+- Send optional notification if notification system exists.
+- If WhatsApp integration exists and user has linked WhatsApp identity, optionally send short payment confirmation through WhatsApp provider. This should be optional and safe if WhatsApp provider is not configured.
+
+Payment confirmation copy:
+
+“تم شحن الرصيد ديالك بنجاح ✅
+تزادو ليك {{credits}} كريدي.”
+
+9. Admin
+
+Register:
+
+- PaymentProvider
+- PaymentProduct
+- PaymentTransaction
+- PaymentWebhookEvent
+- PaymentCreditGrant
+
+Admin should show:
+- user
+- provider
+- product
+- amount
+- currency
+- credits_to_add
+- status
+- provider_transaction_id
+- created_at
+- paid_at
+
+Add filters:
+- provider
+- product
+- status
+- currency
+- created_at
+- paid_at
+
+Admin actions:
+- Mark selected pending transaction as paid for testing only if DEBUG or staff confirmation flag exists.
+- Retry processing webhook event.
+- Do not add unsafe manual credit grants without audit trail.
+
+10. Settings and .env.example
+
+Add:
+
+PAYMENT_PROVIDER=mock
+
+DIGITAL_VIRGO_API_BASE_URL=
+DIGITAL_VIRGO_MERCHANT_ID=
+DIGITAL_VIRGO_API_KEY=
+DIGITAL_VIRGO_WEBHOOK_SECRET=
+DIGITAL_VIRGO_CALLBACK_URL=
+DIGITAL_VIRGO_RETURN_URL=
+
+PAYMENT_TRANSACTION_EXPIRY_MINUTES=30
+
+11. Tests
+
+Add tests for:
+
+Products:
+- Default products are seeded idempotently.
+- Products endpoint returns active products only.
+
+Transaction creation:
+- Authenticated user can start payment.
+- Anonymous user cannot start payment.
+- Invalid product_code returns error.
+- Transaction is created with correct amount and credits.
+- Idempotency key is unique.
+- Mock provider returns payment_url.
+
+Callback handling:
+- Webhook event is stored.
+- Valid success callback marks transaction paid.
+- Valid success callback grants credits.
+- Repeated success callback does not double-credit.
+- Failed callback marks transaction failed.
+- Cancelled callback marks transaction cancelled.
+- Expired callback marks transaction expired.
+- Unknown callback is stored and does not grant credits.
+- Invalid signature is rejected or marked invalid.
+- Callback endpoint does not require login.
+
+Wallet integration:
+- Paid transaction increases wallet balance by product credits.
+- Failed transaction does not increase wallet.
+- PaymentCreditGrant is created exactly once.
+- Wallet CreditAdjustment is created if wallet app supports it.
+
+Security:
+- User cannot view another user’s transaction.
+- Webhook processing uses select_for_update or equivalent transaction safety.
+- Duplicate provider_transaction_id does not create duplicate grants.
+
+PWA:
+- Products page displays packages.
+- Transaction status page displays status.
+- Success page displays updated balance.
+- Failed page displays friendly error.
+
+Provider abstraction:
+- MockPaymentProvider works without credentials.
+- DigitalVirgoProvider fails gracefully when credentials are missing.
+- DigitalVirgoProvider callback parser can normalize paid/failed/cancelled statuses using placeholder mappings.
+
+12. Constraints
+
+Do not implement:
+- Real Digital Virgo API field mapping beyond clearly isolated placeholders unless credentials/docs are available.
+- Subscriptions/recurring billing unless already specified by provider docs.
+- Refund automation beyond placeholder.
+- WhatsApp payment prompts beyond optional confirmation.
+- AI, document, OCR, voice, or message-generation features.
+- Inwi integration.
+- Native mobile app.
+
+This milestone is only about:
+- Products
+- Payment transactions
+- Digital Virgo/mock provider abstraction
+- Callback/webhook processing
+- Idempotent credit activation
+- Payment pages
+- Admin/payment tests
+
+13. After implementation
+
+Show:
+- Files changed
+- New models
+- New services
+- New API endpoints
+- New templates
+- New tests
+- New environment variables
+- How to seed products
+- How to run migrations
+- How to run payment tests
+- How to test with mock payment provider
+- What details are still needed from Digital Virgo production documentation
