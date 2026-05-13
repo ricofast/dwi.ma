@@ -6,7 +6,10 @@ from ninja.errors import HttpError
 from pydantic import BaseModel
 from apps.accounts.auth import require_auth
 from apps.audio.models import VoiceNote, TranscriptionJob
-from apps.audio.services.audio import create_voice_note, delete_voice_note
+from apps.audio.services.audio import create_voice_note
+from apps.audio.services.deletion import delete_voice_note_for_user
+from apps.accounts.services.consent import log_consent
+from apps.accounts.models import ConsentLog
 from apps.audio.services.transcription import transcribe_voice_note
 from apps.audio.services.voice_to_message import generate_message_from_voice_note
 
@@ -16,8 +19,11 @@ class GenerateIn(BaseModel):
     tone: str = 'polite'
 
 @router.post('/audio/upload')
-def upload_audio(request, file: UploadedFile = File(...), source: str = Form('pwa')):
+def upload_audio(request, file: UploadedFile = File(...), source: str = Form('pwa'), consent_accepted: bool = Form(False)):
     require_auth(request)
+    if not consent_accepted:
+        raise HttpError(400, "خاصك توافق على معالجة التسجيل الصوتي")
+    log_consent(user=request.user, consent_type=ConsentLog.ConsentType.AUDIO_PROCESSING, accepted=True, source=source, request=request, consent_text_snapshot="كنوافق أن dwi.ma يعالج هاد التسجيل الصوتي باش يحولو لنص ويكتب ليا الرسالة.")
     vn = create_voice_note(request.user, file, source=source)
     return {'voice_note_id': str(vn.id), 'status': vn.status, 'filename': vn.original_filename, 'file_size': vn.file_size}
 
@@ -45,5 +51,5 @@ def gen_from_voice(request, voice_note_id: UUID, payload: GenerateIn):
 def delete_audio(request, voice_note_id: UUID):
     require_auth(request)
     vn = get_object_or_404(VoiceNote, id=voice_note_id, user=request.user)
-    delete_voice_note(vn, request.user)
+    delete_voice_note_for_user(vn, request.user)
     return {'status':'deleted'}

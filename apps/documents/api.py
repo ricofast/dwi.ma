@@ -11,6 +11,10 @@ from pydantic import BaseModel
 from apps.accounts.auth import require_auth
 from apps.documents.models import UploadedDocument
 from apps.documents.services.extraction import calculate_file_hash, extract_text, validate_document_file
+from apps.accounts.services.consent import log_consent
+from apps.accounts.models import ConsentLog
+from apps.documents.services.deletion import delete_document_for_user
+from apps.core.services.errors import get_safe_error_message
 
 router = Router(tags=["documents"])
 
@@ -27,7 +31,8 @@ class DocumentOut(BaseModel):
 def upload_document(request, file: UploadedFile = File(...), consent_accepted: bool = Form(False), source: str = Form("pwa")):
     require_auth(request)
     if not consent_accepted:
-        raise HttpError(400, "Privacy consent is required")
+        raise HttpError(400, "خاصك توافق على معالجة الوثيقة باش نكملو")
+    log_consent(user=request.user, consent_type=ConsentLog.ConsentType.DOCUMENT_PROCESSING, accepted=True, source=source, request=request, consent_text_snapshot="كنوافق أن dwi.ma يعالج هاد الوثيقة باش يشرحها ليا. نقدر نمسحها من بعد.")
     try:
         file_type = validate_document_file(file)
     except ValidationError as exc:
@@ -105,11 +110,7 @@ def get_extracted_text(request, document_id: UUID):
 def delete_document(request, document_id: UUID):
     require_auth(request)
     doc = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
-    storage = doc.file.storage
-    file_name = doc.file.name
-    if file_name and storage.exists(file_name):
-        storage.delete(file_name)
-    doc.mark_deleted()
+    delete_document_for_user(doc, request.user)
     return {"status": "deleted", "deleted_at": datetime.utcnow().isoformat()}
 
 from apps.assistant.models import AIJob
@@ -130,9 +131,9 @@ def explain_doc(request, document_id: UUID, payload: ExplainIn):
     require_auth(request)
     doc = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
     if not hasattr(doc, "extracted_text") or doc.status != UploadedDocument.Status.EXTRACTED:
-        raise HttpError(400, "Document extraction is required")
+        raise HttpError(400, get_safe_error_message("DOCUMENT_UNREADABLE"))
     if not can_spend(request.user, 1):
-        raise HttpError(402, "Insufficient credits")
+        raise HttpError(402, get_safe_error_message("INSUFFICIENT_CREDITS"))
     job = AIJob.objects.create(user=request.user, job_type=AIJob.JobType.DOCUMENT_EXPLANATION, provider="", model="", status=AIJob.Status.QUEUED, input_hash="", input_preview="", prompt_version="")
     explain_document_task.delay(str(document_id), str(request.user.id))
     return {"job_id": str(job.id), "document_id": str(document_id), "status": "queued"}

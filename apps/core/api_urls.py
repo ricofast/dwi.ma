@@ -1,4 +1,6 @@
 from django.urls import path
+from django.db import connection
+from django.utils import timezone
 from ninja import NinjaAPI
 
 from apps.documents.api import router as documents_router
@@ -11,9 +13,15 @@ from apps.payments.api import router as payments_router
 api = NinjaAPI(title="dwi.ma API")
 
 
-@api.get("/health")
+@api.get("/health/")
 def health(request):
-    return {"status": "ok"}
+    db = "ok"
+    try:
+        with connection.cursor() as c:
+            c.execute("SELECT 1")
+    except Exception:
+        db = "unknown"
+    return {"status": "ok", "database": db, "redis": "unknown", "timestamp": timezone.now().isoformat()}
 
 
 api.add_router("", wallet_router)
