@@ -51,3 +51,25 @@ def text_explanation_result(request, job_id: UUID):
         "disclaimer": data.get("disclaimer_darija", ""),
         "full_answer": data.get("full_answer_darija", ""),
     }
+
+
+class GenerateMessageIn(BaseModel):
+    input_text: str
+    target_format: str
+    tone: str = "polite"
+
+
+@router.post("/assistant/generate-message")
+def generate_message_endpoint(request, payload: GenerateMessageIn):
+    require_auth(request)
+    from apps.assistant.services.message_generation import generate_message_from_text
+    res = generate_message_from_text(request.user, payload.input_text, payload.target_format, payload.tone)
+    return {"job_id": str(res["job"].id), "status": res["job"].status}
+
+
+@router.get("/assistant/message-generations/{job_id}")
+def message_generation_result(request, job_id: UUID):
+    require_auth(request)
+    job = get_object_or_404(AIJob, id=job_id, user=request.user, job_type=AIJob.JobType.MESSAGE_GENERATION)
+    data = job.result_json or {}
+    return {"job_id": str(job.id), "status": job.status, "detected_intent": data.get("detected_intent", ""), "missing_information": data.get("missing_information", []), "generated_message": data.get("generated_message", ""), "suggested_subject": data.get("suggested_subject", ""), "notes_darija": data.get("notes_darija", "")}
