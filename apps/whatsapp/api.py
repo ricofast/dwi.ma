@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.errors import HttpError
 from pydantic import BaseModel
+from django.http import HttpResponse, HttpResponseForbidden
 from apps.accounts.auth import require_auth
 from apps.accounts.models import WhatsAppIdentity
 from apps.assistant.models import AIJob
@@ -20,8 +21,8 @@ def verify_webhook(request, hub_mode: str = "", hub_challenge: str = "", hub_ver
     token = hub_verify_token or request.GET.get("hub.verify_token", "")
     challenge = hub_challenge or request.GET.get("hub.challenge", "")
     if token and token == getattr(settings, "WHATSAPP_VERIFY_TOKEN", ""):
-        return challenge
-    raise HttpError(403, "forbidden")
+        return HttpResponse(challenge, content_type="text/plain")
+    return HttpResponseForbidden("forbidden")
 
 @router.post("/whatsapp/webhook")
 def webhook_post(request):
