@@ -1677,3 +1677,616 @@ Show:
 - How to run WhatsApp tests
 - How to test locally with mock provider
 - What is needed to switch to real Meta Cloud API credentials
+
+
+## Milestone 7 — Voice Transcription and Message Generation
+
+Read AGENTS.md and the product documentation, especially:
+
+- product/PRD.md
+- product/API_SPEC.md
+- product/PROMPTS.md
+- product/MILESTONES.md
+- product/DATA_MODEL.md
+- product/SECURITY_PRIVACY.md
+- product/WHATSAPP_FLOWS.md
+
+Implement Milestone 7 only: Voice-to-Message Generation.
+
+Goal:
+Allow authenticated users to upload or record a Darija voice note, transcribe it, and generate a useful professional message in French, Arabic, or polished Darija. This milestone should reuse the existing AIJob, wallet, provider abstraction, and PWA result infrastructure from previous milestones.
+
+Important:
+This is not a generic voice chatbot. The voice note is used only as input for a controlled workflow:
+- User explains what they want in Darija.
+- System transcribes the voice note.
+- System generates a professional message.
+
+Do not implement open-ended voice conversation.
+
+Core user story:
+As a user, I can send or upload a Darija voice note saying what I want to communicate, choose the target format, spend credits, and receive a polished message that I can copy or send to WhatsApp.
+
+Examples:
+- Darija voice note → professional French email
+- Darija voice note → professional Arabic letter/message
+- Darija voice note → polished Darija WhatsApp message
+- Darija voice note → short polite reply
+
+Requirements:
+
+1. Models
+
+Create or complete the following models in the audio app.
+
+VoiceNote:
+- id: UUID primary key
+- user: ForeignKey to User
+- audio_file
+- original_filename nullable
+- file_type nullable
+- file_size nullable
+- sha256_hash nullable
+- source: choices = pwa, whatsapp, admin
+- whatsapp_media_id nullable
+- duration_seconds nullable
+- status: choices = uploaded, transcribing, transcribed, transcription_failed, processing, completed, failed, deleted
+- transcription_error nullable
+- deleted_at nullable
+- created_at
+- updated_at
+
+TranscriptionJob:
+- id: UUID primary key
+- voice_note: ForeignKey or OneToOneField to VoiceNote
+- provider
+- model
+- status: choices = queued, running, completed, failed
+- transcript
+- language_detected nullable
+- confidence nullable
+- raw_response_json nullable
+- error_message nullable
+- latency_ms nullable
+- created_at
+- updated_at
+- completed_at nullable
+
+Create or complete the following model in assistant app if not already present.
+
+MessageGeneration:
+- id: UUID primary key
+- user: ForeignKey to User
+- ai_job: ForeignKey to AIJob
+- voice_note nullable
+- transcription_job nullable
+- input_text
+- target_format choices:
+  - professional_french_email
+  - professional_arabic_message
+  - polished_darija_whatsapp
+  - short_reply
+- tone choices:
+  - neutral
+  - polite
+  - polite_firm
+  - friendly
+  - formal
+- generated_message
+- created_at
+- updated_at
+
+If the project already stores generated outputs only in AIJob.result_json, that is acceptable, but the result must be easy to retrieve and display.
+
+2. Audio validation
+
+Accept only:
+- mp3
+- mp4
+- m4a
+- wav
+- webm
+- ogg
+- opus
+
+Add settings:
+
+AUDIO_MAX_UPLOAD_MB=15
+ALLOWED_AUDIO_EXTENSIONS=mp3,mp4,m4a,wav,webm,ogg,opus
+TRANSCRIPTION_PROVIDER=mock
+TRANSCRIPTION_MODEL=mock-transcribe
+OPENAI_API_KEY=
+
+Validation rules:
+- Reject files larger than AUDIO_MAX_UPLOAD_MB.
+- Reject unsupported file extensions.
+- Reject empty files.
+- Save original filename.
+- Calculate SHA256 hash.
+- Store file size.
+- Do not expose uploaded audio files publicly.
+- Store audio files securely.
+- Do not delete audio automatically in this milestone unless deletion logic already exists.
+
+3. Transcription provider abstraction
+
+Create:
+
+apps/audio/services/providers.py
+
+Implement:
+
+BaseTranscriptionProvider:
+- transcribe(audio_file_path_or_file, language_hint=None)
+
+MockTranscriptionProvider:
+- Returns a predictable Darija transcript for tests.
+- Must not require real API keys.
+
+OpenAITranscriptionProvider:
+- Reads OPENAI_API_KEY from settings/environment.
+- Reads TRANSCRIPTION_MODEL from settings/environment.
+- Uses the configured OpenAI transcription model.
+- Fails gracefully if API key is missing.
+- Stores safe error messages.
+- Does not crash Celery workers.
+
+Provider selection:
+- TRANSCRIPTION_PROVIDER=mock or openai
+- Default to mock in local/test environments.
+
+4. Audio service layer
+
+Create:
+
+apps/audio/services/audio.py
+
+Implement:
+
+- calculate_audio_hash(file)
+- validate_audio_file(file)
+- create_voice_note(user, file, source="pwa")
+- delete_voice_note(voice_note, user)
+
+Create:
+
+apps/audio/services/transcription.py
+
+Implement:
+
+- transcribe_voice_note(voice_note_id, user=None)
+
+Behavior:
+1. Load voice note.
+2. Verify ownership if user is provided.
+3. Set VoiceNote status to transcribing.
+4. Create TranscriptionJob with status running.
+5. Call transcription provider.
+6. Save transcript.
+7. Mark TranscriptionJob completed.
+8. Mark VoiceNote transcribed.
+9. On failure, mark both failed and save safe error.
+
+Important:
+- Transcription itself should not charge wallet credits unless you decide this task consumes credit separately.
+- For MVP, charge only when final message generation succeeds.
+
+5. Message generation prompt
+
+Create a default active prompt template for message generation.
+
+System prompt:
+
+You are dwi.ma, a Moroccan Darija assistant that helps users turn informal Darija instructions into useful professional messages.
+You must preserve the user's intent.
+Do not add facts that the user did not provide.
+If key information is missing, add clear placeholders like [اسم الشركة], [التاريخ], [الاسم], or [المبلغ].
+Do not invent names, dates, amounts, or commitments.
+Return valid JSON only.
+
+User prompt template:
+
+User instruction in Darija:
+{{input_text}}
+
+Target format:
+{{target_format}}
+
+Tone:
+{{tone}}
+
+Generate a message based only on the user instruction.
+
+Return valid JSON using this exact schema:
+
+{
+  "detected_intent": "string",
+  "missing_information": ["string"],
+  "generated_message": "string",
+  "suggested_subject": "string",
+  "notes_darija": "string"
+}
+
+Rules:
+- Return JSON only.
+- Do not wrap JSON in markdown.
+- Preserve the user's intent.
+- Do not add facts not provided by the user.
+- If important information is missing, use placeholders.
+- The generated message should match the requested target format.
+- If target format is professional_french_email, write the message in French.
+- If target format is professional_arabic_message, write the message in Arabic.
+- If target format is polished_darija_whatsapp, write the message in Moroccan Darija.
+- If target format is short_reply, write a short useful reply.
+
+6. Message generation service
+
+Create:
+
+apps/assistant/services/message_generation.py
+
+Implement:
+
+generate_message_from_text(
+    user,
+    input_text,
+    target_format,
+    tone="polite",
+    voice_note=None,
+    transcription_job=None
+)
+
+Behavior:
+1. Validate authenticated user.
+2. Validate input text is not empty.
+3. Validate target_format is allowed.
+4. Validate tone is allowed.
+5. Check wallet balance.
+6. Reserve 1 credit.
+7. Create AIJob with job_type=message_generation.
+8. Load active message generation prompt.
+9. Call LLM provider.
+10. Parse JSON.
+11. Retry once if JSON invalid.
+12. Save AIResponse.
+13. Save MessageGeneration or AIJob.result_json.
+14. Mark AIJob completed.
+15. Charge reserved usage only after valid generated message is saved.
+16. Return structured result.
+
+Failure behavior:
+- If text is empty, return validation error.
+- If user has insufficient credits, do not create paid job.
+- If LLM fails, mark AIJob failed.
+- If LLM fails, fail reserved usage and do not deduct credits.
+- If JSON parsing fails after retry, mark AIJob failed and do not deduct credits.
+- Do not expose raw technical errors to user.
+
+7. Voice-to-message service
+
+Create:
+
+apps/audio/services/voice_to_message.py
+
+Implement:
+
+generate_message_from_voice_note(
+    user,
+    voice_note_id,
+    target_format,
+    tone="polite"
+)
+
+Behavior:
+1. Verify voice note belongs to user.
+2. If voice note is not transcribed, transcribe it.
+3. Use transcript as input_text.
+4. Call generate_message_from_text.
+5. Save linkage to VoiceNote and TranscriptionJob.
+6. Mark VoiceNote completed if message generation succeeds.
+7. If generation fails, do not deduct credits.
+
+8. Celery tasks
+
+Create or update:
+
+apps/audio/tasks.py
+
+Tasks:
+
+transcribe_voice_note_task(voice_note_id)
+
+Behavior:
+- Run transcription.
+- Mark status.
+- Store safe errors.
+
+generate_message_from_voice_note_task(user_id, voice_note_id, target_format, tone)
+
+Behavior:
+- Ensure transcription exists.
+- Run message generation.
+- Charge credits only on successful message generation.
+- Store result.
+- Never deduct credits on failed transcription or failed message generation.
+
+If existing async pattern from Milestones 4 and 5 uses AIJob first, follow that pattern consistently.
+
+9. API endpoints using Django Ninja
+
+Add endpoints:
+
+POST /api/audio/upload
+
+Multipart upload.
+
+Input:
+- audio file
+- source=pwa
+
+Response:
+{
+  "voice_note_id": "uuid",
+  "status": "uploaded",
+  "filename": "...",
+  "file_size": 12345
+}
+
+POST /api/audio/{voice_note_id}/transcribe
+
+Response:
+{
+  "transcription_job_id": "uuid",
+  "status": "queued|running|completed"
+}
+
+GET /api/audio/{voice_note_id}/transcript
+
+Response:
+{
+  "voice_note_id": "uuid",
+  "status": "transcribed",
+  "transcript": "..."
+}
+
+POST /api/assistant/generate-message
+
+Input:
+{
+  "input_text": "string",
+  "target_format": "professional_french_email",
+  "tone": "polite"
+}
+
+Response:
+{
+  "job_id": "uuid",
+  "status": "queued|running|completed"
+}
+
+POST /api/audio/{voice_note_id}/generate-message
+
+Input:
+{
+  "target_format": "professional_french_email",
+  "tone": "polite"
+}
+
+Response:
+{
+  "job_id": "uuid",
+  "voice_note_id": "uuid",
+  "status": "queued|running|completed"
+}
+
+GET /api/assistant/message-generations/{job_id}
+
+Response:
+{
+  "job_id": "uuid",
+  "status": "completed",
+  "detected_intent": "...",
+  "missing_information": [],
+  "generated_message": "...",
+  "suggested_subject": "...",
+  "notes_darija": "..."
+}
+
+DELETE /api/audio/{voice_note_id}
+
+Behavior:
+- Mark voice note deleted.
+- Delete physical file if project deletion service supports that.
+- User can only delete own voice note.
+
+10. PWA templates
+
+Create mobile-first Bootstrap templates:
+
+- audio/upload.html
+- audio/transcription_result.html
+- assistant/generate_message_form.html
+- assistant/message_processing.html
+- assistant/message_result.html
+
+User flow A: voice note to message
+1. User opens “كتب ليا رسالة”.
+2. User chooses “سجل/طلع فويس”.
+3. User uploads audio file.
+4. User selects:
+   - Professional French email
+   - Professional Arabic message
+   - Polished Darija WhatsApp message
+   - Short reply
+5. User selects tone.
+6. Page shows: “هاد العملية غادي تستعمل 1 كريدي من بعد ما تخرج النتيجة بنجاح.”
+7. User submits.
+8. System transcribes voice note.
+9. System generates message.
+10. Result page shows transcript and generated message.
+
+User flow B: text to message
+1. User opens “كتب ليا رسالة”.
+2. User types Darija instruction.
+3. User chooses target format and tone.
+4. System generates message.
+
+Result page should show:
+- Original transcript/input
+- Detected intent
+- Missing information
+- Suggested subject if available
+- Generated message
+- Notes in Darija
+- Buttons:
+  - Copy message
+  - Generate another message
+  - Send result to WhatsApp if Milestone 6 supports it
+  - Back to dashboard
+
+Suggested UI labels:
+- “كتب ليا رسالة”
+- “طلع فويس نوت”
+- “شنو النوع ديال الرسالة؟”
+- “إيميل مهني بالفرنسية”
+- “رسالة مهنية بالعربية”
+- “رسالة واتساب بدارجة مزيانة”
+- “جواب قصير”
+- “نسخ الرسالة”
+- “صيفط للواتساب”
+
+11. Dashboard/navigation
+
+Update dashboard to include:
+
+Card:
+Title: “كتب ليا رسالة”
+Description:
+“قول شنو بغيتي بدارجة، و dwi.ma يكتبها ليك بطريقة مهنية.”
+
+12. WhatsApp integration, limited
+
+If Milestone 6 is implemented:
+- Add route for menu item “نكتب ليك رسالة”.
+- For now, if user selects it from WhatsApp, send PWA link to the message generation page.
+- Do not process WhatsApp audio media directly unless existing media download service is already implemented.
+- Add TODO for WhatsApp audio media processing in a future milestone.
+
+13. Admin
+
+Register:
+
+- VoiceNote
+- TranscriptionJob
+- MessageGeneration if created
+
+Admin should show:
+- user
+- status
+- provider
+- model
+- source
+- target_format
+- tone
+- created_at
+- completed_at
+
+Add filters:
+- status
+- provider
+- model
+- source
+- target_format
+- created_at
+
+14. Tests
+
+Add tests for:
+
+Audio validation:
+- Valid audio upload succeeds.
+- Unsupported audio extension is rejected.
+- Empty audio file is rejected.
+- Oversized audio file is rejected.
+- SHA256 hash is calculated.
+- VoiceNote is created with correct metadata.
+
+Transcription:
+- Mock transcription provider returns expected transcript.
+- TranscriptionJob is created.
+- Successful transcription marks VoiceNote as transcribed.
+- Failed transcription marks VoiceNote as transcription_failed.
+- Transcription failure does not deduct credits.
+
+Message generation:
+- User can generate message from text.
+- User can generate message from transcribed voice note.
+- Empty text is rejected.
+- Invalid target_format is rejected.
+- Invalid tone is rejected.
+- User with insufficient credits cannot generate message.
+- Successful message generation creates AIJob.
+- Successful message generation creates AIResponse.
+- Successful message generation saves structured result.
+- Successful message generation deducts exactly 1 credit.
+- Failed LLM call does not deduct credits.
+- Invalid JSON response retries once.
+- Invalid JSON after retry marks job failed.
+- Failed message generation does not charge wallet.
+
+Security:
+- User cannot access another user’s voice note.
+- User cannot delete another user’s voice note.
+- Anonymous user cannot access voice upload/generation pages.
+
+API:
+- Audio upload endpoint returns voice_note_id.
+- Transcribe endpoint returns job status.
+- Transcript endpoint returns transcript.
+- Generate-message endpoint returns job_id.
+- Message-generation result endpoint returns generated message.
+
+PWA:
+- Dashboard includes “كتب ليا رسالة”.
+- Message result page displays generated message.
+- Copy button exists.
+
+WhatsApp limited integration:
+- Selecting “نكتب ليك رسالة” from WhatsApp sends PWA link if router exists.
+
+15. Constraints
+
+Do not implement:
+- Digital Virgo payments.
+- Full WhatsApp audio media download and processing unless already available.
+- OCR.
+- Generic chatbot.
+- Inwi support mode.
+- Native mobile app.
+- Voice response / text-to-speech.
+- Human review workflow.
+- Advanced prompt library.
+
+This milestone is only about:
+- Audio upload.
+- Transcription provider abstraction.
+- Voice note transcription.
+- Message generation from transcript or text.
+- Safe wallet charging.
+- PWA pages for message generation.
+- Limited WhatsApp routing to PWA.
+
+16. After implementation
+
+Show:
+- Files changed
+- New models
+- New services
+- New API endpoints
+- New templates
+- New tests
+- New environment variables
+- How to run migrations
+- How to run audio/message tests
+- How to test locally with mock transcription provider
+- How to switch to OpenAI transcription provider
