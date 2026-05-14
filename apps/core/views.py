@@ -10,6 +10,14 @@ def landing(request):
     return render(request, "landing.html")
 
 
+def privacy_policy(request):
+    return render(request, "legal/privacy.html")
+
+
+def terms_of_service(request):
+    return render(request, "legal/terms.html")
+
+
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "dashboard.html"
 
