@@ -1,9 +1,26 @@
-{% extends "base.html" %}
+{% extends "base_auth.html" %}
+{% block title %}تأكيد الأداء · dwi.ma{% endblock %}
+
 {% block content %}
-<div class="container py-4">
-  <h1 class="h4">شحن الرصيد</h1>
-  <p>اختار الباقة - كريدي - خلص بالتليفون</p>
-  <p>تم الأداء بنجاح / ما تكملش الأداء</p>
-  <a href="/dashboard/" class="btn btn-primary">رجع للداشبورد</a>
+<div class="dw-stack dw-gap-lg" style="align-items:center;text-align:center;padding-top:2rem;">
+
+  <div class="dw-fade-in">
+    <div class="dw-spinner dw-spinner-lg" style="margin:0 auto 1rem;"></div>
+    <h1 class="dw-display-sm" style="margin:0;">كنجهزو الأداء...</h1>
+    <p class="dw-body dw-text-muted" style="margin:0.5rem 0 0;">غادي نوجهوك لصفحة الأداء الآمنة</p>
+  </div>
+
+  <div class="dw-card dw-fade-in dw-stagger-1" style="width:100%;text-align:start;">
+    <div class="dw-row dw-gap-md">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--dw-teal-500)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <div>
+        <p style="margin:0;font-size:0.875rem;font-weight:500;color:var(--dw-gray-800);">أداء آمن</p>
+        <p style="margin:0.125rem 0 0;font-size:0.8125rem;color:var(--dw-gray-500);">خلص بالتليفون عبر Digital Virgo</p>
+      </div>
+    </div>
+  </div>
+
+  <a href="{% url 'payments:products' %}" class="dw-btn dw-btn-ghost dw-btn-sm dw-fade-in dw-stagger-2">إلغاء و رجع للباقات</a>
+
 </div>
 {% endblock %}
