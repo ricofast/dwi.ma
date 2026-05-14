@@ -29,6 +29,11 @@ class PhoneLoginForm(forms.Form):
     #     'password': 'كلمة السر',
     # }
 
+    def __init__(self, *args, **kwargs):
+        # Remove 'request' from kwargs so the parent class doesn't see it
+        self.request = kwargs.pop('request', None)
+        super(PhoneLoginForm, self).__init__(*args, **kwargs)
+
     def clean(self):
         cleaned = super().clean()
         phone = cleaned.get("phone_number", "").strip()
