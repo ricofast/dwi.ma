@@ -1,0 +1,95 @@
+{% extends "base_auth.html" %}
+{% block title %}كنفرّغ التسجيل... · dwi.ma{% endblock %}
+
+{% block content %}
+<div class="dw-stack dw-gap-lg" style="align-items:center;text-align:center;padding-top:2rem;">
+
+  <!-- Animated waveform spinner -->
+  <div class="dw-fade-in" style="padding:1rem 0;">
+    <div class="dw-audio-eq" style="display:flex;align-items:end;justify-content:center;gap:4px;height:48px;margin-bottom:1.5rem;">
+      <span class="dw-eq-bar" style="--dw-eq-h:60%;animation-delay:0s;"></span>
+      <span class="dw-eq-bar" style="--dw-eq-h:80%;animation-delay:0.15s;"></span>
+      <span class="dw-eq-bar" style="--dw-eq-h:45%;animation-delay:0.3s;"></span>
+      <span class="dw-eq-bar" style="--dw-eq-h:90%;animation-delay:0.1s;"></span>
+      <span class="dw-eq-bar" style="--dw-eq-h:55%;animation-delay:0.25s;"></span>
+      <span class="dw-eq-bar" style="--dw-eq-h:75%;animation-delay:0.05s;"></span>
+      <span class="dw-eq-bar" style="--dw-eq-h:40%;animation-delay:0.2s;"></span>
+    </div>
+
+    <h1 class="dw-display-sm" style="margin:0;">كنفرّغ التسجيل...</h1>
+    <p class="dw-body dw-text-muted" style="margin:0.5rem 0 0;">
+      كنسمع و كنكتب. لا تسد هاد الصفحة.
+    </p>
+  </div>
+
+  <!-- Voice note info -->
+  {% if voice_note.original_filename %}
+  <div class="dw-card dw-fade-in dw-stagger-1" style="width:100%;max-width:360px;">
+    <div class="dw-row dw-gap-md">
+      <div style="width:40px;height:40px;border-radius:50%;background:var(--dw-amber-50);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--dw-amber-600)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        </svg>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <p style="margin:0;font-size:0.875rem;font-weight:600;color:var(--dw-gray-800);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ voice_note.original_filename }}</p>
+        <p style="margin:0;font-size:0.75rem;color:var(--dw-gray-500);">
+          {% if voice_note.file_size %}{{ voice_note.file_size|filesizeformat }}{% endif %}
+          {% if voice_note.file_type %} · {{ voice_note.file_type|upper }}{% endif %}
+        </p>
+      </div>
+      {% include "partials/_status_badge.html" with status="processing" label="كيتفرّغ" %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- HTMX polling -->
+  <div id="poll-status"
+       hx-get="/api/audio/{{ voice_note.id }}/transcript"
+       hx-trigger="load, every 3s"
+       hx-target="#poll-status"
+       hx-swap="innerHTML"
+       class="dw-fade-in dw-stagger-2"
+       style="width:100%;max-width:360px;">
+  </div>
+
+</div>
+
+<style>
+.dw-eq-bar {
+  width: 5px;
+  border-radius: 3px;
+  background: var(--dw-amber-400);
+  height: var(--dw-eq-h, 50%);
+  animation: dw-eq-bounce 0.8s ease-in-out infinite alternate;
+}
+@keyframes dw-eq-bounce {
+  0% { height: 15%; opacity: 0.5; }
+  100% { height: var(--dw-eq-h, 50%); opacity: 1; }
+}
+</style>
+
+{% block extra_js %}
+<script>
+document.body.addEventListener('htmx:afterRequest', function(evt) {
+  if (evt.detail.target.id !== 'poll-status') return;
+  try {
+    var data = JSON.parse(evt.detail.xhr.responseText);
+    if (data.status === 'transcribed' || data.status === 'completed') {
+      window.location.href = '{% url "audio:transcription_result" voice_note_id=voice_note.id %}';
+    } else if (data.status === 'transcription_failed' || data.status === 'failed') {
+      document.getElementById('poll-status').innerHTML =
+        '<div class="dw-card" style="background:#fef2f2;border-color:#fecaca;text-align:center;">' +
+        '<p style="color:var(--dw-danger);font-weight:600;margin:0;">ما قدرناش نفرّغو التسجيل</p>' +
+        '<p class="dw-text-sm dw-text-muted" style="margin:0.5rem 0 0;">' + (data.error || 'جرب مرة أخرى') + '</p>' +
+        '<a href="{% url "audio:upload" %}" class="dw-btn dw-btn-secondary" style="margin-top:1rem;">جرب مرة أخرى</a>' +
+        '</div>';
+      var eq = document.querySelector('.dw-audio-eq');
+      if (eq) eq.style.display = 'none';
+    }
+  } catch(e) {}
+});
+</script>
+{% endblock %}
+{% endblock %}
