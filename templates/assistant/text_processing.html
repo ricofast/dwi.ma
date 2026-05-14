@@ -1,10 +1,51 @@
-{% extends "base.html" %}
+{% extends "base_auth.html" %}
+{% block title %}كنشرحو النص... · dwi.ma{% endblock %}
+
 {% block content %}
-<h1>كنعالجو النص...</h1>
-<p>تسنى شوية.</p>
-{% if job.status == 'completed' %}
-  <script>window.location.href="{% url 'assistant:text_result' job.id %}";</script>
-{% else %}
-  <meta http-equiv="refresh" content="2">
-{% endif %}
+<div class="dw-stack dw-gap-lg" style="align-items:center;text-align:center;padding-top:2rem;">
+
+  <div class="dw-fade-in">
+    <div class="dw-spinner dw-spinner-lg" style="margin:0 auto 1rem;"></div>
+    <h1 class="dw-display-sm" style="margin:0;">كنشرحو النص...</h1>
+    <p class="dw-body dw-text-muted" style="margin:0.5rem 0 0;">غادي ياخد شوية ديال الوقت. لا تسد هاد الصفحة.</p>
+  </div>
+
+  {% if job.input_preview %}
+  <div class="dw-card dw-fade-in dw-stagger-1" style="width:100%;text-align:start;">
+    <p class="dw-label" style="margin:0 0 0.375rem;">النص المدخل</p>
+    <p style="margin:0;font-size:0.8125rem;color:var(--dw-gray-500);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">{{ job.input_preview|truncatechars:200 }}</p>
+  </div>
+  {% endif %}
+
+  <div id="job-poll"
+       hx-get="/api/assistant/jobs/{{ job.id }}"
+       hx-trigger="load, every 3s"
+       hx-target="#job-poll"
+       hx-swap="innerHTML"
+       class="dw-fade-in dw-stagger-2">
+    {% include "partials/_status_badge.html" with status="processing" label="كيتعالج..." %}
+  </div>
+
+</div>
+
+{% block extra_js %}
+<script>
+document.body.addEventListener('htmx:afterRequest', function(evt) {
+  if (evt.detail.target && evt.detail.target.id !== 'job-poll') return;
+  try {
+    var data = JSON.parse(evt.detail.xhr.responseText);
+    if (data.status === 'completed') {
+      window.location.href = '{% url "assistant:text_result" job_id=job.id %}';
+    } else if (data.status === 'failed') {
+      document.getElementById('job-poll').innerHTML =
+        '<div class="dw-card" style="background:#fef2f2;border-color:#fecaca;text-align:center;width:100%;">' +
+        '<p style="color:var(--dw-danger);font-weight:600;margin:0;">ما قدرناش نشرحو النص</p>' +
+        '<p class="dw-text-sm dw-text-muted" style="margin:0.5rem 0 0;">' + (data.error_message || 'جرب مرة أخرى') + '</p>' +
+        '<a href="{% url "assistant:explain_text_form" %}" class="dw-btn dw-btn-secondary" style="margin-top:1rem;">جرب نص آخر</a>' +
+        '</div>';
+    }
+  } catch(e) {}
+});
+</script>
+{% endblock %}
 {% endblock %}

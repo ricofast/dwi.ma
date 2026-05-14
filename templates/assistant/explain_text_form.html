@@ -1,11 +1,37 @@
-{% extends "base.html" %}
+{% extends "base_auth.html" %}
+{% block title %}شرح ليا نص · dwi.ma{% endblock %}
+
 {% block content %}
-<h1>شرح ليا نص</h1>
-<p>هاد العملية غادي تستعمل 1 كريدي</p>
-<form method="post" action="" class="d-grid gap-2">
-  {% csrf_token %}
-  <label for="id_text">لسق النص هنا</label>
-  <textarea id="id_text" name="text" class="form-control" rows="8" required>{{ request.POST.text }}</textarea>
-  <button class="btn btn-primary">شرح النص</button>
-</form>
+<div class="dw-stack dw-gap-lg">
+
+  <section class="dw-fade-in">
+    <h1 class="dw-display-sm" style="margin:0;">شرح ليا نص</h1>
+    <p class="dw-body" style="margin:0.25rem 0 0;">لسق نص بالفرنسية ولا العربية و dwi.ma يشرحو ليك بدارجة بسيطة</p>
+  </section>
+
+  <form method="post" class="dw-stack dw-gap-md dw-fade-in dw-stagger-1">
+    {% csrf_token %}
+
+    <div class="dw-form-group" style="margin:0;">
+      <label class="dw-form-label" for="id_text">لسق النص هنا</label>
+      <textarea id="id_text" name="text" class="dw-input" rows="8" required
+                minlength="10"
+                placeholder="مثلا: نص من عقد، فاتورة، رسالة إدارية، إعلان..."
+                style="line-height:1.65;">{{ request.POST.text }}</textarea>
+      <p class="dw-form-hint">على الأقل 10 حروف</p>
+    </div>
+
+    <!-- Credit cost -->
+    <div class="dw-row dw-gap-sm" style="padding:0 0.25rem;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--dw-gray-400)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <span class="dw-text-sm dw-text-muted">هاد العملية غادي تستعمل <strong style="color:var(--dw-gray-700);">1 كريدي</strong> — رصيدك: <strong style="color:var(--dw-teal-600);">{{ balance }}</strong></span>
+    </div>
+
+    <button type="submit" class="dw-btn dw-btn-primary dw-btn-block dw-btn-lg">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      شرح النص
+    </button>
+  </form>
+
+</div>
 {% endblock %}
