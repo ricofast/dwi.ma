@@ -1,1 +1,110 @@
-{% extends "base.html" %}{% block content %}<h3>طلع فويس نوت</h3>{% endblock %}
+{% extends "base_auth.html" %}
+{% block title %}سجل فويس نوت · dwi.ma{% endblock %}
+
+{% block content %}
+<div class="dw-stack dw-gap-lg">
+
+  <section class="dw-fade-in">
+    <h1 class="dw-display-sm" style="margin:0;">سجل فويس نوت</h1>
+    <p class="dw-body" style="margin:0.25rem 0 0;">طلع تسجيل صوتي و dwi.ma يحولو لنص بالدارجة</p>
+  </section>
+
+  <form method="post" enctype="multipart/form-data" class="dw-stack dw-gap-md dw-fade-in dw-stagger-1">
+    {% csrf_token %}
+
+    <!-- Audio file drop zone -->
+    <div class="dw-card" x-data="{ fileName: '', dragging: false }"
+         :style="dragging && 'border-color:var(--dw-amber-400);background:var(--dw-amber-50);'"
+         @dragover.prevent="dragging = true"
+         @dragleave.prevent="dragging = false"
+         @drop.prevent="dragging = false; if($event.dataTransfer.files[0]) { $refs.audioInput.files = $event.dataTransfer.files; fileName = $event.dataTransfer.files[0].name; }"
+         style="padding:1.5rem;text-align:center;border:2px dashed var(--dw-gray-300);border-radius:var(--dw-radius-lg);cursor:pointer;transition:all 0.2s;"
+         @click="$refs.audioInput.click()">
+
+      <!-- Waveform icon -->
+      <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--dw-amber-50),var(--dw-amber-100));display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--dw-amber-600)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="23"/>
+          <line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+      </div>
+
+      <input type="file" name="file" accept=".mp3,.mp4,.m4a,.wav,.webm,.ogg,.opus" required
+             x-ref="audioInput" style="display:none;"
+             @change="fileName = $event.target.files[0]?.name || ''">
+
+      <template x-if="!fileName">
+        <div>
+          <p style="margin:0;font-size:0.9375rem;font-weight:600;color:var(--dw-gray-700);">اختار تسجيل صوتي</p>
+          <p class="dw-form-hint" style="margin:0.375rem 0 0;">MP3, M4A, WAV, OGG, OPUS — حجم أقصى 15 ميغا</p>
+        </div>
+      </template>
+
+      <template x-if="fileName">
+        <div class="dw-row dw-gap-sm" style="justify-content:center;">
+          <div style="width:32px;height:32px;border-radius:50%;background:var(--dw-amber-400);display:flex;align-items:center;justify-content:center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--dw-amber-900)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>
+          </div>
+          <p style="margin:0;font-size:0.875rem;font-weight:600;color:var(--dw-gray-800);" x-text="fileName"></p>
+        </div>
+      </template>
+    </div>
+
+    <!-- Waveform decoration -->
+    <div class="dw-audio-wave-bar dw-fade-in dw-stagger-2" style="display:flex;align-items:center;justify-content:center;gap:3px;height:24px;padding:0 1rem;">
+      <span style="width:3px;height:8px;border-radius:2px;background:var(--dw-amber-200);"></span>
+      <span style="width:3px;height:14px;border-radius:2px;background:var(--dw-amber-300);"></span>
+      <span style="width:3px;height:20px;border-radius:2px;background:var(--dw-amber-400);"></span>
+      <span style="width:3px;height:12px;border-radius:2px;background:var(--dw-amber-300);"></span>
+      <span style="width:3px;height:24px;border-radius:2px;background:var(--dw-amber-500);"></span>
+      <span style="width:3px;height:16px;border-radius:2px;background:var(--dw-amber-400);"></span>
+      <span style="width:3px;height:10px;border-radius:2px;background:var(--dw-amber-300);"></span>
+      <span style="width:3px;height:18px;border-radius:2px;background:var(--dw-amber-400);"></span>
+      <span style="width:3px;height:8px;border-radius:2px;background:var(--dw-amber-200);"></span>
+      <span style="width:3px;height:22px;border-radius:2px;background:var(--dw-amber-500);"></span>
+      <span style="width:3px;height:14px;border-radius:2px;background:var(--dw-amber-300);"></span>
+      <span style="width:3px;height:6px;border-radius:2px;background:var(--dw-amber-200);"></span>
+      <span style="width:3px;height:16px;border-radius:2px;background:var(--dw-amber-400);"></span>
+      <span style="width:3px;height:10px;border-radius:2px;background:var(--dw-amber-300);"></span>
+      <span style="width:3px;height:20px;border-radius:2px;background:var(--dw-amber-500);"></span>
+      <span style="width:3px;height:8px;border-radius:2px;background:var(--dw-amber-200);"></span>
+    </div>
+
+    <!-- Consent (audio variant) -->
+    <div class="dw-card" style="background:var(--dw-amber-50);border-color:var(--dw-amber-200);padding:1rem;">
+      <div style="display:flex;gap:0.75rem;align-items:flex-start;">
+        <input class="form-check-input" type="checkbox" name="consent_accepted" value="true" id="id_consent" required
+               style="width:22px;height:22px;margin-top:2px;flex-shrink:0;border-radius:6px;border:2px solid var(--dw-amber-400);cursor:pointer;">
+        <label for="id_consent" style="cursor:pointer;">
+          <p style="margin:0;font-size:0.875rem;font-weight:600;color:var(--dw-amber-900);">
+            كنوافق أن dwi.ma يعالج هاد التسجيل الصوتي باش يحولو لنص.
+          </p>
+          <p style="margin:0.25rem 0 0;font-size:0.8125rem;color:var(--dw-amber-700);">
+            التسجيل غادي يتمسح بعد المعالجة. هاد الخدمة غير للمساعدة وماشي استشارة رسمية.
+          </p>
+        </label>
+      </div>
+    </div>
+
+    <!-- Credit cost -->
+    <div class="dw-row dw-gap-sm" style="padding:0 0.25rem;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--dw-gray-400)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <span class="dw-text-sm dw-text-muted">هاد العملية غادي تستعمل <strong style="color:var(--dw-gray-700);">1 كريدي</strong> — رصيدك: <strong style="color:var(--dw-teal-600);">{{ balance }}</strong></span>
+    </div>
+
+    <!-- Submit -->
+    <button type="submit" class="dw-btn dw-btn-amber dw-btn-block dw-btn-lg">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        <line x1="12" y1="19" x2="12" y2="23"/>
+        <line x1="8" y1="23" x2="16" y2="23"/>
+      </svg>
+      فرّغ التسجيل
+    </button>
+  </form>
+
+</div>
+{% endblock %}
