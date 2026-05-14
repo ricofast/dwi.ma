@@ -10,8 +10,8 @@ class PhoneLoginForm(forms.Form):
         widget=forms.TextInput(attrs={
             "class": "dw-input",
             "dir": "ltr",
-            "inputmode": "tel",
-            "autocomplete": "tel",
+            # "inputmode": "tel",
+            # "autocomplete": "tel",
             "placeholder": "06XXXXXXXX",
         }),
     )
