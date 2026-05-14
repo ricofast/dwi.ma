@@ -1,1 +1,45 @@
-{% extends 'base.html' %}{% block content %}<div class='container py-3'><h4>كناوجدو الشرح...</h4><div hx-get='/api/assistant/jobs/{{ job_id }}' hx-trigger='load, every 2s' hx-swap='innerHTML'></div></div>{% endblock %}
+{% extends "base_auth.html" %}
+{% block title %}كنجهزو الشرح... · dwi.ma{% endblock %}
+
+{% block content %}
+<div class="dw-stack dw-gap-lg" style="align-items:center;text-align:center;padding-top:2rem;">
+
+  <div class="dw-fade-in">
+    <div class="dw-spinner dw-spinner-lg" style="margin:0 auto 1rem;"></div>
+    <h1 class="dw-display-sm" style="margin:0;">كنجهزو الشرح...</h1>
+    <p class="dw-body dw-text-muted" style="margin:0.5rem 0 0;">
+      غادي ياخد شوية ديال الوقت. لا تسد هاد الصفحة.
+    </p>
+  </div>
+
+  <div id="job-status"
+       hx-get="/api/assistant/jobs/{{ job_id }}"
+       hx-trigger="load, every 3s"
+       hx-target="#job-status"
+       hx-swap="innerHTML"
+       class="dw-fade-in dw-stagger-1">
+    {% include "partials/_status_badge.html" with status="processing" label="كيتعالج..." %}
+  </div>
+
+</div>
+
+{% block extra_js %}
+<script>
+document.body.addEventListener('htmx:afterRequest', function(evt) {
+  try {
+    var data = JSON.parse(evt.detail.xhr.responseText);
+    if (data.status === 'completed') {
+      window.location.href = '/document/{{ document_id }}/result/';
+    } else if (data.status === 'failed') {
+      document.getElementById('job-status').innerHTML =
+        '<div class="dw-card" style="background:#fef2f2;border-color:#fecaca;text-align:center;">' +
+        '<p style="color:var(--dw-danger);font-weight:600;margin:0;">ما قدرناش نشرحو الوثيقة</p>' +
+        '<p class="dw-text-sm dw-text-muted" style="margin:0.5rem 0 0;">' + (data.error_message || 'جرب مرة أخرى') + '</p>' +
+        '<a href="{% url "dashboard" %}" class="dw-btn dw-btn-secondary" style="margin-top:1rem;">رجع للرئيسية</a>' +
+        '</div>';
+    }
+  } catch(e) {}
+});
+</script>
+{% endblock %}
+{% endblock %}

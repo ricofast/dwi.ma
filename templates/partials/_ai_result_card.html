@@ -1,0 +1,114 @@
+{% comment %}
+Shared AI result display card.
+Usage: {% include "partials/_ai_result_card.html" with result=result %}
+
+Expects `result` dict with keys:
+  summary_darija / short_summary_darija, important_points, extracted_entities,
+  unclear_points, next_steps, disclaimer_darija, full_answer_darija / full_response_text,
+  document_type / text_type
+{% endcomment %}
+<div class="dw-stack dw-gap-md">
+
+  {% if result.document_type or result.text_type %}
+  <div class="dw-row dw-gap-sm">
+    <span class="dw-badge dw-badge-info">{{ result.document_type|default:result.text_type }}</span>
+  </div>
+  {% endif %}
+
+  <!-- Summary -->
+  {% with summary=result.summary_darija|default:result.short_summary_darija %}
+  {% if summary %}
+  <div class="dw-card" style="background:var(--dw-teal-50);border-color:var(--dw-teal-200);">
+    <p class="dw-label" style="color:var(--dw-teal-600);margin:0 0 0.375rem;">الخلاصة</p>
+    <p style="margin:0;font-size:0.9375rem;line-height:1.65;color:var(--dw-teal-900);">{{ summary }}</p>
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <!-- Important points -->
+  {% with points=result.important_points|default:result.important_points_json %}
+  {% if points %}
+  <div class="dw-card">
+    <p class="dw-label" style="margin:0 0 0.5rem;">النقاط المهمة</p>
+    <ul style="margin:0;padding-inline-start:1.25rem;list-style:none;">
+      {% for point in points %}
+      <li style="padding:0.375rem 0;font-size:0.875rem;line-height:1.6;color:var(--dw-gray-700);position:relative;">
+        <span style="position:absolute;right:calc(100% + 0.5rem);color:var(--dw-amber-500);font-weight:700;">&#x25C6;</span>
+        {{ point }}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <!-- Extracted entities -->
+  {% with entities=result.extracted_entities|default:result.extracted_entities_json %}
+  {% if entities %}
+  <div class="dw-card">
+    <p class="dw-label" style="margin:0 0 0.5rem;">المعلومات المستخرجة</p>
+    <div class="dw-stack dw-gap-xs">
+      {% for key, value in entities.items %}
+      {% if value %}
+      <div class="dw-row" style="justify-content:space-between;padding:0.375rem 0;border-bottom:1px solid var(--dw-gray-100);">
+        <span class="dw-text-sm" style="color:var(--dw-gray-500);font-weight:500;">{{ key }}</span>
+        <span class="dw-text-sm" style="color:var(--dw-gray-800);font-weight:500;">{{ value }}</span>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <!-- Next steps -->
+  {% with steps=result.next_steps|default:result.next_steps_json %}
+  {% if steps %}
+  <div class="dw-card" style="background:var(--dw-amber-50);border-color:var(--dw-amber-200);">
+    <p class="dw-label" style="color:var(--dw-amber-700);margin:0 0 0.5rem;">شنو خاصك دير دابا؟</p>
+    <ol style="margin:0;padding-inline-start:1.25rem;">
+      {% for step in steps %}
+      <li style="padding:0.25rem 0;font-size:0.875rem;line-height:1.6;color:var(--dw-gray-700);">{{ step }}</li>
+      {% endfor %}
+    </ol>
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <!-- Unclear points -->
+  {% with unclear=result.unclear_points|default:result.unclear_points_json %}
+  {% if unclear %}
+  <div class="dw-card" style="background:var(--dw-gray-50);">
+    <p class="dw-label" style="margin:0 0 0.375rem;">نقاط ماشي واضحة فالوثيقة</p>
+    <ul style="margin:0;padding-inline-start:1.25rem;">
+      {% for point in unclear %}
+      <li class="dw-text-sm" style="padding:0.25rem 0;color:var(--dw-gray-600);">{{ point }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <!-- Full answer (collapsible) -->
+  {% with full=result.full_answer_darija|default:result.full_response_text %}
+  {% if full %}
+  <div class="dw-card" x-data="{ open: false }">
+    <button type="button" @click="open = !open" class="dw-row" style="width:100%;background:none;border:none;cursor:pointer;padding:0;justify-content:space-between;">
+      <span class="dw-label" style="margin:0;">الشرح الكامل</span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--dw-gray-400)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="open && 'transform:rotate(180deg)'" style="transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div x-show="open" x-collapse style="margin-top:0.75rem;">
+      <div id="full-answer-text" style="padding:0.875rem;background:var(--dw-gray-50);border-radius:var(--dw-radius-md);border:1px solid var(--dw-gray-200);max-height:400px;overflow-y:auto;">
+        <pre style="margin:0;white-space:pre-wrap;word-break:break-word;font-family:var(--dw-font-body);font-size:0.875rem;color:var(--dw-gray-700);line-height:1.65;">{{ full }}</pre>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <!-- Disclaimer -->
+  {% if result.disclaimer_darija %}
+  {% include "partials/_disclaimer.html" with text=result.disclaimer_darija %}
+  {% endif %}
+
+</div>

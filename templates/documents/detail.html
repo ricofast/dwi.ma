@@ -1,12 +1,76 @@
-{% extends "base.html" %}
+{% extends "base_auth.html" %}
+{% block title %}{{ document.original_filename }} · dwi.ma{% endblock %}
+
 {% block content %}
-<div class="container py-3">
-  <h1 class="h5">{{ document.original_filename }}</h1>
-  <ul class="list-group mb-3">
-    <li class="list-group-item">الحالة: {{ document.status }}</li>
-    <li class="list-group-item">النوع: {{ document.file_type }}</li>
-    <li class="list-group-item">الحجم: {{ document.file_size }} bytes</li>
-  </ul>
-  <a class="btn btn-primary w-100" href="/documents/{{ document.id }}/result/">شوف نتيجة الاستخراج</a>
+<div class="dw-stack dw-gap-lg">
+
+  <!-- Header -->
+  <section class="dw-fade-in">
+    <a href="{% url 'dashboard' %}" class="dw-btn dw-btn-ghost dw-btn-sm" style="margin:-0.25rem -0.5rem 0.25rem;color:var(--dw-gray-500);">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      الرئيسية
+    </a>
+    <h1 class="dw-display-sm" style="margin:0;word-break:break-word;">{{ document.original_filename }}</h1>
+  </section>
+
+  <!-- Document info card -->
+  <section class="dw-card dw-fade-in dw-stagger-1">
+    <div class="dw-stack dw-gap-sm">
+      <div class="dw-row" style="justify-content:space-between;">
+        <span class="dw-label">الحالة</span>
+        {% include "partials/_status_badge.html" with status=document.status %}
+      </div>
+      <hr class="dw-divider" style="margin:0.5rem 0;">
+      <div class="dw-row" style="justify-content:space-between;">
+        <span class="dw-label">النوع</span>
+        <span class="dw-text-sm" style="font-weight:500;color:var(--dw-gray-700);text-transform:uppercase;">{{ document.file_type }}</span>
+      </div>
+      <div class="dw-row" style="justify-content:space-between;">
+        <span class="dw-label">الحجم</span>
+        <span class="dw-text-sm" style="color:var(--dw-gray-600);">{{ document.file_size|filesizeformat }}</span>
+      </div>
+      <div class="dw-row" style="justify-content:space-between;">
+        <span class="dw-label">التاريخ</span>
+        <span class="dw-text-sm" style="color:var(--dw-gray-600);">{{ document.created_at|date:"d/m/Y H:i" }}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Actions -->
+  <section class="dw-stack dw-gap-sm dw-fade-in dw-stagger-2">
+    {% if can_extract %}
+    <form method="post" action="/api/documents/{{ document.id }}/extract/">
+      {% csrf_token %}
+      <button type="submit" class="dw-btn dw-btn-primary dw-btn-block dw-btn-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        استخرج النص
+      </button>
+    </form>
+    {% endif %}
+
+    {% if can_explain %}
+    <div class="dw-row dw-gap-sm" style="padding:0 0.25rem;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--dw-gray-400)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <span class="dw-text-sm dw-text-muted">هاد العملية غادي تستعمل <strong style="color:var(--dw-gray-700);">1 كريدي</strong> — رصيدك: <strong style="color:var(--dw-teal-600);">{{ balance }}</strong></span>
+    </div>
+    <a href="/api/documents/{{ document.id }}/explain/" class="dw-btn dw-btn-amber dw-btn-block dw-btn-lg">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      شرح ليا الوثيقة بدارجة
+    </a>
+    {% endif %}
+
+    {% if has_analysis %}
+    <a href="{% url 'document:document_extraction_result' document_id=document.id %}" class="dw-btn dw-btn-secondary dw-btn-block">
+      شوف نتيجة الشرح
+    </a>
+    {% endif %}
+
+    {% if document.status == 'extracted' and document.extracted_text %}
+    <a href="{% url 'document:document_extraction_result' document_id=document.id %}" class="dw-btn dw-btn-outline dw-btn-block">
+      شوف النص المستخرج
+    </a>
+    {% endif %}
+  </section>
+
 </div>
 {% endblock %}
