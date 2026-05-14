@@ -20,6 +20,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "crispy_forms",
+    "crispy_bootstrap5",
     "apps.accounts",
     "apps.wallet",
     "apps.payments",
@@ -147,3 +149,7 @@ AUDIO_ORIGINAL_RETENTION_DAYS = env.int("AUDIO_ORIGINAL_RETENTION_DAYS", default
 DELETE_EXTRACTED_TEXT_ON_DOCUMENT_DELETE = env.bool("DELETE_EXTRACTED_TEXT_ON_DOCUMENT_DELETE", default=True)
 DELETE_TRANSCRIPT_ON_AUDIO_DELETE = env.bool("DELETE_TRANSCRIPT_ON_AUDIO_DELETE", default=True)
 DELETE_AI_RESULTS_ON_SOURCE_DELETE = env.bool("DELETE_AI_RESULTS_ON_SOURCE_DELETE", default=False)
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+
+CRISPY_TEMPLATE_PACK = "bootstrap5"

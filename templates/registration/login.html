@@ -1,4 +1,6 @@
 {% extends "base_public.html" %}
+{% load crispy_forms_tags %}
+
 {% block title %}دخل · dwi.ma{% endblock %}
 
 {% block content %}
@@ -28,22 +30,22 @@
 
     <form method="post" class="dw-stack dw-gap-md">
       {% csrf_token %}
+      {{ form|crispy }}
+<!--      <div class="dw-form-group" style="margin:0;">-->
+<!--        <label class="dw-form-label" for="id_phone_number">رقم الهاتف</label>-->
+<!--        {{ form.phone_number }}-->
+<!--        {% if form.phone_number.errors %}-->
+<!--        <p class="dw-form-hint" style="color:var(&#45;&#45;dw-danger);">{{ form.phone_number.errors.0 }}</p>-->
+<!--        {% endif %}-->
+<!--      </div>-->
 
-      <div class="dw-form-group" style="margin:0;">
-        <label class="dw-form-label" for="id_phone_number">رقم الهاتف</label>
-        {{ form.phone_number }}
-        {% if form.phone_number.errors %}
-        <p class="dw-form-hint" style="color:var(--dw-danger);">{{ form.phone_number.errors.0 }}</p>
-        {% endif %}
-      </div>
-
-      <div class="dw-form-group" style="margin:0;">
-        <label class="dw-form-label" for="id_password">كلمة السر</label>
-        {{ form.password }}
-        {% if form.password.errors %}
-        <p class="dw-form-hint" style="color:var(--dw-danger);">{{ form.password.errors.0 }}</p>
-        {% endif %}
-      </div>
+<!--      <div class="dw-form-group" style="margin:0;">-->
+<!--        <label class="dw-form-label" for="id_password">كلمة السر</label>-->
+<!--        {{ form.password }}-->
+<!--        {% if form.password.errors %}-->
+<!--        <p class="dw-form-hint" style="color:var(&#45;&#45;dw-danger);">{{ form.password.errors.0 }}</p>-->
+<!--        {% endif %}-->
+<!--      </div>-->
 
       <button type="submit" class="dw-btn dw-btn-primary dw-btn-block dw-btn-lg">
         دخل
