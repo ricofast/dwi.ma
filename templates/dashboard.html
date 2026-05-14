@@ -1,8 +1,97 @@
-{% extends "base.html" %}
-{% block title %}Dashboard · dwi.ma{% endblock %}
+{% extends "base_auth.html" %}
+{% block title %}الرئيسية · dwi.ma{% endblock %}
+
 {% block content %}
-<h1 class="h3">Dashboard</h1>
-<p>Salam, {{ request.user.phone_number }} 👋</p>
-<div class="card"><div class="card-body"><h2 class="h5">شرح ليا نص</h2><p>لسق نص بالفرنسية ولا العربية، و dwi.ma يشرحو ليك بدارجة بسيطة.</p><a class="btn btn-primary" href="/assistant/explain-text/">شرح ليا نص</a></div></div>
-<div class="card mt-3"><div class="card-body"><h2 class="h5">كتب ليا رسالة</h2><p>قول شنو بغيتي بدارجة، و dwi.ma يكتبها ليك بطريقة مهنية.</p><a class="btn btn-primary" href="/assistant/generate-message/">كتب ليا رسالة</a></div></div>
+<div class="dw-stack dw-gap-lg">
+
+  <!-- Greeting + wallet summary -->
+  <section class="dw-fade-in">
+    <p class="dw-label" style="margin-bottom:0.125rem;">مرحبا</p>
+    <h1 class="dw-display-sm" style="margin:0;">{{ request.user.full_name|default:request.user.phone_number }}</h1>
+  </section>
+
+  <!-- Credit card -->
+  <section class="dw-card dw-pattern-bg dw-fade-in dw-stagger-1" style="background:var(--dw-teal-600);border-color:var(--dw-teal-700);">
+    <div class="dw-row" style="justify-content:space-between;flex-wrap:wrap;gap:0.75rem;">
+      <div>
+        <p class="dw-label" style="color:var(--dw-teal-200);margin:0;">رصيد الكريدي</p>
+        <p style="font-size:2rem;font-weight:700;color:#fff;margin:0.25rem 0 0;line-height:1;">
+          {{ wallet.balance|default:"0" }}
+          <span style="font-size:0.875rem;font-weight:500;color:var(--dw-teal-200);">كريدي</span>
+        </p>
+      </div>
+      <a href="{% url 'dashboard' %}" class="dw-btn dw-btn-amber dw-btn-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        شحن الرصيد
+      </a>
+    </div>
+  </section>
+
+  <!-- Task cards -->
+  <section class="dw-stack dw-gap-sm dw-fade-in dw-stagger-2">
+    <h2 class="dw-label" style="margin:0;">شنو بغيتي دير؟</h2>
+
+    <a href="{% url 'document:document_upload' %}" class="dw-card dw-card-interactive" style="text-decoration:none;">
+      <div class="dw-card-header">
+        <div class="dw-card-icon dw-card-icon-teal">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div>
+          <p class="dw-card-title">شرح ليا وثيقة</p>
+          <p class="dw-card-desc">طلع PDF ولا صورة و dwi.ma يشرحها ليك بدارجة</p>
+        </div>
+      </div>
+    </a>
+
+    <a href="{% url 'assistant:explain_text_form' %}" class="dw-card dw-card-interactive" style="text-decoration:none;">
+      <div class="dw-card-header">
+        <div class="dw-card-icon dw-card-icon-amber">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div>
+          <p class="dw-card-title">شرح ليا نص</p>
+          <p class="dw-card-desc">لسق نص بالفرنسية ولا العربية و نشرحوه ليك بدارجة بسيطة</p>
+        </div>
+      </div>
+    </a>
+
+    <a href="{% url 'assistant:generate_message_form' %}" class="dw-card dw-card-interactive" style="text-decoration:none;">
+      <div class="dw-card-header">
+        <div class="dw-card-icon dw-card-icon-info">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </div>
+        <div>
+          <p class="dw-card-title">كتب ليا رسالة</p>
+          <p class="dw-card-desc">قول شنو بغيتي بدارجة و نكتبوها ليك بطريقة مهنية</p>
+        </div>
+      </div>
+    </a>
+  </section>
+
+  <!-- Recent activity -->
+  {% if recent_jobs %}
+  <section class="dw-fade-in dw-stagger-3">
+    <h2 class="dw-label" style="margin:0 0 0.5rem;">آخر النشاط</h2>
+    <div class="dw-card" style="padding:0;">
+      {% for job in recent_jobs %}
+      <a href="{% if job.job_type == 'text_explanation' %}{% url 'assistant:text_result' job_id=job.id %}{% elif job.job_type == 'message_generation' %}{% url 'assistant:message_result' job_id=job.id %}{% else %}{% url 'dashboard' %}{% endif %}"
+         class="dw-row dw-gap-md"
+         style="padding:0.875rem 1.25rem;text-decoration:none;color:inherit;border-bottom:1px solid var(--dw-gray-100);transition:background 0.15s;{% if forloop.last %}border-bottom:none;{% endif %}"
+         onmouseover="this.style.background='var(--dw-gray-50)'" onmouseout="this.style.background='transparent'">
+        <div style="flex:1;min-width:0;">
+          <p style="margin:0;font-size:0.875rem;font-weight:500;color:var(--dw-gray-800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            {% if job.job_type == 'document_explanation' %}شرح وثيقة{% elif job.job_type == 'text_explanation' %}شرح نص{% elif job.job_type == 'message_generation' %}كتابة رسالة{% else %}{{ job.job_type }}{% endif %}
+          </p>
+          <p style="margin:0.125rem 0 0;font-size:0.75rem;color:var(--dw-gray-400);">
+            {{ job.created_at|timesince }} فات
+          </p>
+        </div>
+        {% include "partials/_status_badge.html" with status=job.status %}
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+</div>
 {% endblock %}
