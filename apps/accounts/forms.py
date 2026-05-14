@@ -7,6 +7,7 @@ from apps.accounts.models import User
 class PhoneLoginForm(forms.Form):
     phone_number = forms.CharField(
         max_length=20,
+        label='رقم الهاتف',
         widget=forms.TextInput(attrs={
             "class": "dw-input",
             "dir": "ltr",
@@ -16,16 +17,17 @@ class PhoneLoginForm(forms.Form):
         }),
     )
     password = forms.CharField(
+        label='كلمة السر',
         widget=forms.PasswordInput(attrs={
             "class": "dw-input",
             "dir": "ltr",
             "autocomplete": "current-password",
         }),
     )
-    labels = {
-        'phone_number': 'رقم الهاتف',
-        'password': 'كلمة السر',
-    }
+    # labels = {
+    #     'phone_number': 'رقم الهاتف',
+    #     'password': 'كلمة السر',
+    # }
 
     def clean(self):
         cleaned = super().clean()
