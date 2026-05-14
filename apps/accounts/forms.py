@@ -4,30 +4,38 @@ from django.contrib.auth import authenticate
 from apps.accounts.models import User
 
 
-class PhoneLoginForm(forms.Form):
-    phone_number = forms.CharField(
-        max_length=20,
-        label='رقم الهاتف',
-        widget=forms.TextInput(attrs={
+class PhoneLoginForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['phone_number', 'password']
+        labels = {
+            'phone_number': 'رقم الهاتف',
+            'password': 'كلمة السر',
+        }
+    # phone_number = forms.CharField(
+    #     max_length=20,
+    #     label='رقم الهاتف',
+        widget = {"phone_number": forms.TextInput(attrs={
             "class": "dw-input",
             "dir": "ltr",
             "inputmode": "tel",
             "autocomplete": "tel",
             "placeholder": "06XXXXXXXX",
-        }),
-    )
-    password = forms.CharField(
-        label='كلمة السر',
-        widget=forms.PasswordInput(attrs={
+        }), "password": forms.PasswordInput(attrs={
             "class": "dw-input",
             "dir": "ltr",
             "autocomplete": "current-password",
-        }),
-    )
-    # labels = {
-    #     'phone_number': 'رقم الهاتف',
-    #     'password': 'كلمة السر',
-    # }
+        })}
+    # )
+    # password = forms.CharField(
+    #     label='كلمة السر',
+    #     widget=forms.PasswordInput(attrs={
+    #         "class": "dw-input",
+    #         "dir": "ltr",
+    #         "autocomplete": "current-password",
+    #     }),
+    # )
+
 
     def clean(self):
         cleaned = super().clean()
