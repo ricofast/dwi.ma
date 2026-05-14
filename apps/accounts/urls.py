@@ -7,7 +7,7 @@ from .forms import PhoneLoginForm
 app_name = "accounts"
 
 urlpatterns = [
-    path("login/", auth_views.LoginView.as_view(template_name="registration/login.html", authentication_form=PhoneLoginForm), name="login"),
+    path("login/", auth_views.LoginView.as_view(template_name="registration/login.html"), name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("register/", PhoneRegisterView.as_view(), name="register"),
     path("whatsapp-login/<str:token>/", WhatsAppLoginView.as_view(), name="whatsapp-login"),
