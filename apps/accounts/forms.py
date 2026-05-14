@@ -10,8 +10,8 @@ class PhoneLoginForm(forms.Form):
         widget=forms.TextInput(attrs={
             "class": "dw-input",
             "dir": "ltr",
-            # "inputmode": "tel",
-            # "autocomplete": "tel",
+            "inputmode": "tel",
+            "autocomplete": "tel",
             "placeholder": "06XXXXXXXX",
         }),
     )
@@ -22,6 +22,10 @@ class PhoneLoginForm(forms.Form):
             "autocomplete": "current-password",
         }),
     )
+    labels = {
+        'phone_number': 'رقم الهاتف',
+        'password': 'كلمة السر',
+    }
 
     def clean(self):
         cleaned = super().clean()
