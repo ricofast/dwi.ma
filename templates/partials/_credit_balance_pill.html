@@ -1,0 +1,8 @@
+{% comment %}
+Include inside _navbar.html or any authenticated page.
+Expects `credit_balance` in template context (from context processor).
+{% endcomment %}
+<a href="{% url 'dashboard' %}" class="dw-credit-pill{% if credit_balance is not None and credit_balance < 2 %} dw-credit-low{% endif %}">
+  <span class="dw-credit-icon">C</span>
+  <span>{{ credit_balance|default:"0" }}</span>
+</a>

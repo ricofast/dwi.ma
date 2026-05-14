@@ -1,0 +1,23 @@
+{% comment %}
+Reusable status badge partial.
+Usage: {% include "partials/_status_badge.html" with status="completed" label="تم بنجاح" %}
+
+Supported status values:
+  completed/success, processing/running, queued, failed/error,
+  uploaded, extracted, deleted, pending, paid
+{% endcomment %}
+{% if status == 'completed' or status == 'success' or status == 'paid' or status == 'extracted' %}
+  <span class="dw-badge dw-badge-success dw-badge-dot">{{ label|default:status }}</span>
+{% elif status == 'processing' or status == 'running' or status == 'extracting' or status == 'transcribing' %}
+  <span class="dw-badge dw-badge-processing dw-badge-dot">{{ label|default:"كيتعالج..." }}</span>
+{% elif status == 'queued' or status == 'pending' or status == 'uploaded' or status == 'initiated' %}
+  <span class="dw-badge dw-badge-info dw-badge-dot">{{ label|default:"فالانتظار" }}</span>
+{% elif status == 'failed' or status == 'error' or status == 'extraction_failed' or status == 'transcription_failed' %}
+  <span class="dw-badge dw-badge-danger dw-badge-dot">{{ label|default:"فشل" }}</span>
+{% elif status == 'deleted' or status == 'cancelled' or status == 'expired' %}
+  <span class="dw-badge dw-badge-neutral dw-badge-dot">{{ label|default:status }}</span>
+{% elif status == 'warning' %}
+  <span class="dw-badge dw-badge-warning dw-badge-dot">{{ label|default:"تنبيه" }}</span>
+{% else %}
+  <span class="dw-badge dw-badge-neutral">{{ label|default:status }}</span>
+{% endif %}

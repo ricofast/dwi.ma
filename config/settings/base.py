@@ -54,6 +54,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.core.context_processors.credit_balance",
             ],
         },
     },
@@ -90,6 +91,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATICFILES_DIRS = [BASE_DIR / "staticfiles"]
 STATIC_ROOT = BASE_DIR / "static"
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -107,7 +109,7 @@ DEFAULT_FREE_CREDITS = env.int("DEFAULT_FREE_CREDITS", default=3)
 DOCUMENT_MAX_UPLOAD_MB = env.int("DOCUMENT_MAX_UPLOAD_MB", default=10)
 ALLOWED_DOCUMENT_EXTENSIONS = [e.strip() for e in env.str("ALLOWED_DOCUMENT_EXTENSIONS", default="pdf,jpg,jpeg,png,webp").split(",") if e.strip()]
 
-LOGIN_URL = "login"
+LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "landing"
 
