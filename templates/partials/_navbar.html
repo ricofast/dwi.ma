@@ -1,7 +1,9 @@
 {% load static %}
+{% load static %}
+
 <header class="dw-navbar">
   <a href="{% url 'dashboard' %}" class="dw-navbar-brand">
-    dwi<span class="dw-brand-dot"></span>ma
+    <img src="{% static 'icons/logo-wordmark.svg' %}" alt="dwi.ma" height="28">
   </a>
 
   <div class="dw-navbar-end">

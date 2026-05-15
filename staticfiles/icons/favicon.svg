@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- Favicon: ultra-simplified d + amber dot -->
+  <rect width="32" height="32" rx="7" fill="#0b6b58"/>
+
+  <!-- "d" simplified -->
+  <rect x="17.5" y="5" width="4" height="22" rx="2" fill="#fff"/>
+  <path d="M19.5 10 C12 10, 7 13.5, 7 17.5 C7 21.5, 12 24, 19.5 24"
+        fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Amber dot -->
+  <circle cx="24" cy="24" r="3.5" fill="#f5a623"/>
+</svg>
