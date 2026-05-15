@@ -9,6 +9,9 @@ from apps.assistant.models import PromptTemplate
 
 REQUIRED_KEYS = {"document_type", "short_summary_darija", "important_points_darija", "extracted_entities", "unclear_points_darija", "next_steps_darija", "disclaimer_darija", "full_answer_darija"}
 
+OPENAI_API_KEY = settings.OPENAI_KEY
+GEMINI_API_KEY = settings.GEMINIAPI_KEY
+ANTHROPIC_API_KEY = settings.ANTHROPIC_API_KEY
 
 class BaseLLMProvider(ABC):
     @abstractmethod
@@ -23,21 +26,24 @@ class MockLLMProvider(BaseLLMProvider):
 
 class OpenAIProvider(BaseLLMProvider):
     def generate(self, system_prompt: str, user_prompt: str, model: str) -> str:
-        if not os.getenv("OPENAI_API_KEY"):
+        if not OPENAI_API_KEY:
+        # if not os.getenv("OPENAI_API_KEY"):
             raise ValidationError("AI provider unavailable")
         raise ValidationError("OpenAI provider not implemented yet")
 
 
 class AnthropicProvider(BaseLLMProvider):
     def generate(self, system_prompt: str, user_prompt: str, model: str) -> str:
-        if not os.getenv("ANTHROPIC_API_KEY"):
+        if not GEMINI_API_KEY:
+        # if not os.getenv("ANTHROPIC_API_KEY"):
             raise ValidationError("AI provider unavailable")
         raise ValidationError("Anthropic provider not implemented yet")
 
 
 class GeminiProvider(BaseLLMProvider):
     def generate(self, system_prompt: str, user_prompt: str, model: str) -> str:
-        if not os.getenv("GEMINI_API_KEY"):
+        if not GEMINI_API_KEY:
+        # if not os.getenv("GEMINI_API_KEY"):
             raise ValidationError("AI provider unavailable")
         raise ValidationError("Gemini provider not implemented yet")
 
