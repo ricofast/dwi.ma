@@ -10,6 +10,8 @@ from apps.assistant.models import AIJob
 import hashlib
 from apps.assistant.tasks import explain_text_task
 from apps.wallet.services import can_spend
+from .schemas.schemas import UserDocumentPayload, GeminiDwiResponseSchema
+from .services.gemini_services import GeminiDwiEngine
 
 router = Router(tags=["assistant"])
 

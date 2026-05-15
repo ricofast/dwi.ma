@@ -11,3 +11,4 @@ pymupdf>=1.27.2.3
 django-crispy-forms==2.6
 crispy-bootstrap5==2026.3
 django-allauth==65.16.1
+google-genai==2.3.0

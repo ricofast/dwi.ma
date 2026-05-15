@@ -1,4 +1,44 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="80" fill="#0b6b58"/>
-  <text x="256" y="300" text-anchor="middle" font-family="'IBM Plex Sans Arabic', sans-serif" font-size="172" font-weight="700" fill="#ffffff">d<tspan fill="#f5a623">.</tspan>m</text>
+  <defs>
+    <!-- Zellige star pattern for texture -->
+    <pattern id="zellige" x="0" y="0" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M24 0L30 12L24 24L18 12Z" fill="rgba(255,255,255,0.03)"/>
+      <path d="M0 24L6 36L0 48L-6 36Z" fill="rgba(255,255,255,0.02)"/>
+      <path d="M48 24L54 36L48 48L42 36Z" fill="rgba(255,255,255,0.02)"/>
+    </pattern>
+    <!-- Subtle inner glow -->
+    <radialGradient id="glow" cx="50%" cy="42%" r="55%">
+      <stop offset="0%" stop-color="#0d9b7a" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#064a3b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="#0b6b58"/>
+  <rect width="512" height="512" rx="112" fill="url(#zellige)"/>
+  <rect width="512" height="512" rx="112" fill="url(#glow)"/>
+
+  <!-- Letter "d" — geometric, constructed from arcs and lines -->
+  <g transform="translate(96, 100)">
+    <!-- Vertical stem of "d" -->
+    <rect x="200" y="0" width="44" height="312" rx="22" fill="#fff"/>
+    <!-- Bowl of "d" — a large arc -->
+    <path d="M222 72 C222 72, 222 72, 222 72
+             C140 72, 72 136, 72 204
+             C72 272, 140 312, 222 312"
+          fill="none" stroke="#fff" stroke-width="44" stroke-linecap="round"/>
+  </g>
+
+  <!-- Amber dot — the hero element with inner zellige star -->
+  <g transform="translate(368, 356)">
+    <!-- Outer ring -->
+    <circle cx="0" cy="0" r="44" fill="#f5a623"/>
+    <!-- Inner 8-pointed star (zellige motif) -->
+    <path d="M0-24L6-8L24 0L8 6L0 24L-6 8L-24 0L-8-6Z" fill="#e09100" opacity="0.35"/>
+    <!-- Center jewel -->
+    <circle cx="0" cy="0" r="10" fill="#fff" opacity="0.9"/>
+    <!-- Highlight -->
+    <circle cx="-4" cy="-6" r="4" fill="#fff" opacity="0.5"/>
+  </g>
+
 </svg>

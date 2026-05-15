@@ -1,5 +1,10 @@
 {% extends "base_public.html" %}
+{% load static %}
+
+
 {% block title %}سياسة الخصوصية · dwi.ma{% endblock %}
+
+
 
 {% block content %}
 <article class="dw-legal" style="max-width:600px;margin:0 auto;padding:2rem 0 3rem;">
@@ -7,9 +12,7 @@
   <!-- Header -->
   <header class="dw-fade-in" style="text-align:center;margin-bottom:2.5rem;">
     <a href="{% url 'landing' %}" style="text-decoration:none;">
-      <p style="font-family:var(--dw-font-display);font-size:1.75rem;font-weight:700;color:var(--dw-teal-600);margin:0;line-height:1;">
-        dwi<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--dw-amber-500);margin:0 1px;vertical-align:middle;"></span>ma
-      </p>
+      <img src="{% static 'icons/logo-wordmark.svg' %}" alt="dwi.ma" height="28">
     </a>
     <div style="width:48px;height:3px;background:var(--dw-teal-400);border-radius:2px;margin:1.25rem auto;"></div>
     <h1 style="font-family:var(--dw-font-display);font-size:1.5rem;font-weight:700;color:var(--dw-gray-900);margin:0;">سياسة الخصوصية</h1>
