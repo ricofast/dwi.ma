@@ -1,4 +1,10 @@
-/* dwi.ma — Minimal Alpine.js components + toast auto-dismiss */
+/* dwi.ma — Minimal Alpine.js components + toast auto-dismiss + SW registration */
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('/sw.js').catch(function () {});
+  });
+}
 
 document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('.dw-toast[data-auto-dismiss]').forEach(function (toast) {
