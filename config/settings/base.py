@@ -22,15 +22,15 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "django.contrib.humanize",
-    "allauth",
-    "allauth.account",
-    "allauth.socialaccount",
-    "allauth.socialaccount.providers.apple",
-    "allauth.socialaccount.providers.facebook",
-    "allauth.socialaccount.providers.google",
-    "allauth.socialaccount.providers.twitter",
-    "allauth.socialaccount.providers.instagram",
-    "allauth.socialaccount.providers.telegram",
+    # "allauth",
+    # "allauth.account",
+    # "allauth.socialaccount",
+    # "allauth.socialaccount.providers.apple",
+    # "allauth.socialaccount.providers.facebook",
+    # "allauth.socialaccount.providers.google",
+    # "allauth.socialaccount.providers.twitter",
+    # "allauth.socialaccount.providers.instagram",
+    # "allauth.socialaccount.providers.telegram",
     "crispy_forms",
     "crispy_bootstrap5",
     "apps.accounts",
@@ -52,7 +52,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "allauth.account.middleware.AccountMiddleware",
+    # "allauth.account.middleware.AccountMiddleware",
 ]
 ADMIN_URL = env.str("DJANGO_ADMIN_URL")
 ROOT_URLCONF = "config.urls"
@@ -103,11 +103,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
-    "allauth.account.auth_backends.AuthenticationBackend",
+    # "allauth.account.auth_backends.AuthenticationBackend",
 )
 
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-ACCOUNT_EMAIL_VERIFICATION = "optional"
+# SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# ACCOUNT_EMAIL_VERIFICATION = "optional"
 
 
 
