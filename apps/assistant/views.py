@@ -17,6 +17,7 @@ class ExplainTextFormView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        ctx["credit"] = int(getattr(settings, "CREDITS_COST_TEXT_EXPLANATION", 1))
         ctx["active_tab"] = "home"
         ctx["balance"] = get_balance(self.request.user)
         return ctx
@@ -79,6 +80,7 @@ class GenerateMessageFormView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        ctx["credit"] = int(getattr(settings, "CREDITS_COST_TEXT_EXPLANATION", 1))
         ctx["active_tab"] = "write"
         ctx["balance"] = get_balance(self.request.user)
         return ctx

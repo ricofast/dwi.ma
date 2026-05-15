@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import TemplateView
-
+from django.conf import settings
 from apps.accounts.models import ConsentLog
 from apps.accounts.services.consent import log_consent
 from apps.audio.models import VoiceNote, TranscriptionJob
@@ -17,6 +17,7 @@ class AudioUploadView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        ctx["credit"] = int(getattr(settings, "CREDITS_COST_VOICE_MESSAGE", 1))
         ctx["active_tab"] = "home"
         ctx["balance"] = get_balance(self.request.user)
         return ctx
