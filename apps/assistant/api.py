@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.errors import HttpError
 from pydantic import BaseModel
-
+from django.conf import settings
 from apps.accounts.auth import require_auth
 from apps.assistant.models import AIJob
 import hashlib
@@ -22,9 +22,10 @@ class ExplainTextIn(BaseModel):
 @router.post("/assistant/explain-text")
 def explain_text_endpoint(request, payload: ExplainTextIn):
     require_auth(request)
+    amount = int(getattr(settings, "CREDITS_COST_TEXT_EXPLANATION", 1))
     if not payload.text or len(payload.text.strip()) < 10:
         raise HttpError(400, "النص خاص يكون فيه على الأقل 10 حروف")
-    if not can_spend(request.user, 1):
+    if not can_spend(request.user, amount):
         raise HttpError(402, "Insufficient credits")
     text = payload.text.strip()
     job = AIJob.objects.create(user=request.user, job_type=AIJob.JobType.TEXT_EXPLANATION, provider="", model="", status=AIJob.Status.QUEUED, input_hash=hashlib.sha256(text.encode()).hexdigest(), input_preview=text[:500], prompt_version="")

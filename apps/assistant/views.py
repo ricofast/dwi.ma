@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import TemplateView
+from django.conf import settings
 
 from apps.assistant.models import AIJob
 from apps.assistant.services.message_generation import generate_message_from_text
@@ -22,10 +23,11 @@ class ExplainTextFormView(LoginRequiredMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         text = (request.POST.get("text") or "").strip()
+        amount = int(getattr(settings, "CREDITS_COST_TEXT_EXPLANATION", 1))
         if len(text) < 10:
             messages.error(request, "النص خاص يكون فيه على الأقل 10 حروف")
             return self.get(request, *args, **kwargs)
-        if not can_spend(request.user, 1):
+        if not can_spend(request.user, amount):
             messages.error(request, "ماعندكش كريدي كافي")
             return self.get(request, *args, **kwargs)
         job = AIJob.objects.create(

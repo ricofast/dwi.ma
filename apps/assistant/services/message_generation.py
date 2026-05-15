@@ -28,7 +28,8 @@ def generate_message_from_text(user, input_text, target_format, tone="polite", v
     if not tmpl:
         raise ValidationError("Prompt template unavailable")
 
-    usage = reserve_credits(user=user, amount=1, event_type="message_generation", reference_type="text")
+    amount = int(getattr(settings, "CREDITS_COST_TEXT_EXPLANATION", 1))
+    usage = reserve_credits(user=user, amount=amount, event_type="message_generation", reference_type="text")
     provider_name = getattr(settings, "DEFAULT_LLM_PROVIDER", "mock")
     model_name = getattr(settings, "DEFAULT_LLM_MODEL", "mock-1")
     job = AIJob.objects.create(user=user, job_type=AIJob.JobType.MESSAGE_GENERATION, provider=provider_name, model=model_name, status=AIJob.Status.QUEUED, input_hash=hashlib.sha256(text.encode()).hexdigest(), input_preview=text[:500], prompt_version=tmpl.version)

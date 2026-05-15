@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import TemplateView
-
+from django.conf import settings
 from apps.accounts.models import ConsentLog
 from apps.accounts.services.consent import log_consent
 from apps.documents.models import UploadedDocument
@@ -20,6 +20,7 @@ class UploadPageView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        ctx["credit"] = int(getattr(settings, "CREDITS_COST_DOCUMENT_EXPLANATION", 2))
         ctx["active_tab"] = "documents"
         ctx["balance"] = get_balance(self.request.user)
         return ctx

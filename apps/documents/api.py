@@ -3,6 +3,7 @@ from uuid import UUID
 
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
+from django.conf import settings
 from ninja import File, Form, Router
 from ninja.files import UploadedFile
 from ninja.errors import HttpError
@@ -130,9 +131,11 @@ class ExplainIn(BaseModel):
 def explain_doc(request, document_id: UUID, payload: ExplainIn):
     require_auth(request)
     doc = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
+    amount = int(getattr(settings, "CREDITS_COST_DOCUMENT_EXPLANATION", 2))
+
     if not hasattr(doc, "extracted_text") or doc.status != UploadedDocument.Status.EXTRACTED:
         raise HttpError(400, get_safe_error_message("DOCUMENT_UNREADABLE"))
-    if not can_spend(request.user, 1):
+    if not can_spend(request.user, amount):
         raise HttpError(402, get_safe_error_message("INSUFFICIENT_CREDITS"))
     job = AIJob.objects.create(user=request.user, job_type=AIJob.JobType.DOCUMENT_EXPLANATION, provider="", model="", status=AIJob.Status.QUEUED, input_hash="", input_preview="", prompt_version="")
     explain_document_task.delay(str(document_id), str(request.user.id))

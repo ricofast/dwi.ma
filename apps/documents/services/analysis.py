@@ -2,7 +2,7 @@ import hashlib
 
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-
+from django.conf import settings
 from apps.assistant.models import AIJob, AIResponse
 from apps.assistant.services.providers import generate_document_explanation
 from apps.documents.models import DocumentAnalysis, UploadedDocument
@@ -18,7 +18,9 @@ def explain_document(document_id, user):
     if document.status != UploadedDocument.Status.EXTRACTED:
         raise ValidationError("الوثيقة خاصها تكون واجدة للشرح.")
 
-    usage = reserve_credits(user=user, amount=1, event_type="document_explanation", reference_type="document", reference_id=document.id)
+    amount = int(getattr(settings, "CREDITS_COST_DOCUMENT_EXPLANATION", 2))
+
+    usage = reserve_credits(user=user, amount=amount, event_type="document_explanation", reference_type="document", reference_id=document.id)
     ai_job = AIJob.objects.create(user=user, job_type=AIJob.JobType.DOCUMENT_EXPLANATION, provider="", model="", status=AIJob.Status.QUEUED, input_hash=hashlib.sha256(document.extracted_text.text.encode()).hexdigest(), input_preview=document.extracted_text.text[:500], prompt_version="")
     try:
         ai_job.status = AIJob.Status.RUNNING
