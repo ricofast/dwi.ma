@@ -132,7 +132,9 @@ def explain_doc(request, document_id: UUID, payload: ExplainIn):
     require_auth(request)
     doc = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
     amount = int(getattr(settings, "CREDITS_COST_DOCUMENT_EXPLANATION", 2))
-
+    print("Document ID:", document_id)
+    print("*************************************************************************")
+    print("document fetched id:", doc.id)
     if not hasattr(doc, "extracted_text") or doc.status != UploadedDocument.Status.EXTRACTED:
         raise HttpError(400, get_safe_error_message("DOCUMENT_UNREADABLE"))
     if not can_spend(request.user, amount):
