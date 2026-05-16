@@ -11,24 +11,21 @@ from apps.assistant.models import PromptTemplate
 
 REQUIRED_KEYS = {"document_type", "short_summary_darija", "important_points_darija", "extracted_entities", "unclear_points_darija", "next_steps_darija", "disclaimer_darija", "full_answer_darija"}
 
-OPENAI_API_KEY = settings.OPENAI_KEY
-GEMINI_API_KEY = settings.GEMINIAPI_KEY
-ANTHROPIC_API_KEY = settings.ANTHROPIC_API_KEY
 
 class BaseLLMProvider(ABC):
     @abstractmethod
-    def generate(self, system_prompt: str, user_prompt: str, model: str) -> str:
+    def generate(self, system_prompt: str, user_prompt: str, user_instruction: str, model: str) -> str:
         pass
 
 
 class MockLLMProvider(BaseLLMProvider):
-    def generate(self, system_prompt: str, user_prompt: str, model: str) -> str:
+    def generate(self, system_prompt: str, user_prompt: str, user_instruction: str, model: str) -> str:
         return json.dumps({"document_type": "unknown", "short_summary_darija": "هاد شرح مبسط للوثيقة.", "important_points_darija": ["المحتوى موجود فالوثيقة"], "extracted_entities": {"names": [], "dates": [], "amounts": [], "deadlines": [], "obligations": []}, "unclear_points_darija": [], "next_steps_darija": [], "disclaimer_darija": "", "full_answer_darija": "هاد هو الشرح الكامل بالدارجة."}, ensure_ascii=False)
 
 
 class OpenAIProvider(BaseLLMProvider):
-    def generate(self, system_prompt: str, user_prompt: str, model: str) -> str:
-        api_key = os.getenv("OPENAI_API_KEY") or getattr(settings, "OPENAI_API_KEY", "")
+    def generate(self, system_prompt: str, user_prompt: str, user_instruction: str, model: str) -> str:
+        api_key = os.getenv("DJANGO_OPENAI") or getattr(settings, "OPENAI_API_KEY", "")
         if not api_key:
             raise ValidationError("AI provider unavailable")
         payload = {
@@ -62,8 +59,8 @@ class OpenAIProvider(BaseLLMProvider):
 
 
 class AnthropicProvider(BaseLLMProvider):
-    def generate(self, system_prompt: str, user_prompt: str, model: str) -> str:
-        api_key = os.getenv("ANTHROPIC_API_KEY") or getattr(settings, "ANTHROPIC_API_KEY", "")
+    def generate(self, system_prompt: str, user_prompt: str, user_instruction: str, model: str) -> str:
+        api_key = os.getenv("DJANGO_ANTHROPICAPI") or getattr(settings, "ANTHROPIC_API_KEY", "")
         if not api_key:
             raise ValidationError("AI provider unavailable")
         payload = {
@@ -94,14 +91,70 @@ class AnthropicProvider(BaseLLMProvider):
 
 
 class GeminiProvider(BaseLLMProvider):
-    def generate(self, system_prompt: str, user_prompt: str, model: str) -> str:
-        api_key = os.getenv("GEMINI_API_KEY") or getattr(settings, "GEMINI_API_KEY", "")
+    def generate(self, system_prompt: str, user_prompt: str, user_instruction: str, model: str) -> str:
+        api_key = os.getenv("DJANGO_GEMINIAPI") or getattr(settings, "GEMINI_API_KEY", "")
         if not api_key:
             raise ValidationError("AI provider unavailable")
+        # payload = {
+        #     "system_instruction": {"parts": [{"text": system_prompt}]},
+        #     "contents": [{"role": "user", "parts": [{"text": user_prompt}]}],
+        #     "generationConfig": {"temperature": 0.2},
+        # }
         payload = {
-            "system_instruction": {"parts": [{"text": system_prompt}]},
-            "contents": [{"role": "user", "parts": [{"text": user_prompt}]}],
-            "generationConfig": {"temperature": 0.2},
+            "contents": [
+                {
+                    "parts": [
+                        {
+                            "text": (
+                                "[CONTEXT / DOCUMENT DATA START]\n"
+                                f"{user_prompt}\n"
+                                "[CONTEXT / DOCUMENT DATA END]\n\n"
+                                "[USER OBJECTIVE / INSTRUCTION]\n"
+                                f"{user_instruction}"
+                            )
+                        }
+                    ]
+                }
+            ],
+            "systemInstruction": {
+                "parts": [
+                    {"text": system_prompt}
+                    # Insert your system prompt here
+                ]
+            },
+            "generationConfig": {
+                "responseMimeType": "application/json",
+                "temperature": 0.2,
+                "maxOutputTokens": 2000,
+                # Define the exact structural schema directly in the JSON body
+                "responseSchema": {
+                    "type": "OBJECT",
+                    "properties": {
+                        "explanation": {
+                            "type": "STRING",
+                            "description": "The primary explanation, translated content, or drafted text in simple Moroccan Darija (Arabic script)."
+                        },
+                        "missing_information": {
+                            "type": "ARRAY",
+                            "items": {"type": "STRING"},
+                            "description": "Missing elements required from the user to complete the task accurately."
+                        },
+                        "is_unclear": {
+                            "type": "BOOLEAN",
+                            "description": "Flag true if the user's uploaded document content or message prompt is entirely unintelligible."
+                        },
+                        "unclear_message": {
+                            "type": "STRING",
+                            "description": "If is_unclear is True, must contain exactly: 'هاد النقطة ما واضحةش فالمعطيات اللي توصلت بها.'"
+                        },
+                        "disclaimer": {
+                            "type": "STRING",
+                            "description": "Mandatory exact warning block for legal or official documents."
+                        }
+                    },
+                    "required": ["explanation", "missing_information", "is_unclear", "unclear_message", "disclaimer"]
+                }
+            }
         }
         req = urlrequest.Request(
             url=f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}",
@@ -132,8 +185,9 @@ def generate_document_explanation(document_text, provider=None, model=None):
     provider_name = provider or getattr(settings, "DEFAULT_LLM_PROVIDER", "mock")
     model_name = model or getattr(settings, "DEFAULT_LLM_MODEL", "mock-1")
     p = _get_provider(provider_name)
+    instructions = ""
     user_prompt = tmpl.user_prompt_template.replace("{{document_text}}", document_text)
-    raw = p.generate(tmpl.system_prompt, user_prompt, model_name)
+    raw = p.generate(tmpl.system_prompt, user_prompt, instructions, model_name)
 
     def parse_or_none(text):
         try:

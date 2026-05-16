@@ -4,34 +4,47 @@ from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.errors import HttpError
 from pydantic import BaseModel
+import os
+from google import genai
+from google.genai import types
+
 from django.conf import settings
 from apps.accounts.auth import require_auth
 from apps.assistant.models import AIJob
 import hashlib
 from apps.assistant.tasks import explain_text_task
 from apps.wallet.services import can_spend
-from .schemas.schemas import UserDocumentPayload, GeminiDwiResponseSchema
-from .services.gemini_services import GeminiDwiEngine
+from apps.assistant.schemas.schemas import UserDocumentPayload, GeminiDwiResponseSchema
+from apps.assistant.services.gemini_services import GeminiDwiEngine
+from apps.assistant.services.providers import _get_provider
 
 router = Router(tags=["assistant"])
 
 
 class ExplainTextIn(BaseModel):
-    text: str
+    extracted_text: str
     output_language: str = "darija_arabic"
+
+
+provider_name = getattr(settings, "DEFAULT_LLM_PROVIDER", "mock")
+provider = _get_provider(provider_name)
+if not provider_name == "gemini":
+    payload = ExplainTextIn
+else:
+    payload = UserDocumentPayload
 
 
 @router.post("/assistant/explain-text")
 def explain_text_endpoint(request, payload: ExplainTextIn):
     require_auth(request)
     amount = int(getattr(settings, "CREDITS_COST_TEXT_EXPLANATION", 1))
-    if not payload.text or len(payload.text.strip()) < 10:
+    if not payload.extracted_text or len(payload.extracted_text.strip()) < 10:
         raise HttpError(400, "النص خاص يكون فيه على الأقل 10 حروف")
     if not can_spend(request.user, amount):
         raise HttpError(402, "Insufficient credits")
-    text = payload.text.strip()
+    text = payload.extracted_text.strip()
     job = AIJob.objects.create(user=request.user, job_type=AIJob.JobType.TEXT_EXPLANATION, provider="", model="", status=AIJob.Status.QUEUED, input_hash=hashlib.sha256(text.encode()).hexdigest(), input_preview=text[:500], prompt_version="")
-    explain_text_task.delay(str(request.user.id), text, {"output_language": payload.output_language, "job_id": str(job.id)})
+    explain_text_task.delay(str(request.user.id), text, {"output_language": payload.output_language, "job_id": str(job.id), "instructions": payload.user_instruction})
     return {"job_id": str(job.id), "status": "queued"}
 
 

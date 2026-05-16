@@ -29,6 +29,7 @@ class GeminiDwiResponseSchema(BaseModel):
         )
     )
 
+
 # ==========================================
 # DJANGO NINJA INBOUND DATA SCHEMAS
 # ==========================================
@@ -36,3 +37,16 @@ class UserDocumentPayload(BaseModel):
     user_id: str
     extracted_text: str = Field(..., description="The OCR transcription text or voice note transcript sent by the user.")
     user_instruction: Optional[str] = Field("mre7ba, fhemna ach kayn f had l-wetiqa", description="Specific user override instruction.")
+
+
+class DynamicProcessPayload(BaseModel):
+    user_id: str
+    user_instruction: str = Field(..., description="The Darija task command requested by the user.")
+
+    # Optional parameters depending on your system's pre-extraction success
+    extracted_text: Optional[str] = Field(None, description="Pre-extracted text or transcript if successful.")
+
+    # Fallback parameters if pre-extraction fails
+    file_base64: Optional[str] = Field(None, description="Raw Base64 string of the file if extraction fails.")
+    mime_type: Optional[str] = Field(None,
+                                     description="The file MIME type, e.g., 'application/pdf', 'image/jpeg', 'audio/ogg'.")

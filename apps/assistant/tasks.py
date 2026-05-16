@@ -13,5 +13,6 @@ def explain_text_task(self, user_id, input_text, options=None):
     if not user:
         raise ValidationError("User not found")
     job = AIJob.objects.filter(id=options.get("job_id"), user=user).first() if options.get("job_id") else None
-    result = explain_text(user=user, input_text=input_text, output_language=options.get("output_language", "darija_arabic"), ai_job=job)
+    result = explain_text(user=user, input_text=input_text, user_instruction=options.get("instructions"),
+                          output_language=options.get("output_language", "darija_arabic"), ai_job=job)
     return str(result["job"].id)

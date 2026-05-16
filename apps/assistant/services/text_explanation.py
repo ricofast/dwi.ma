@@ -8,6 +8,7 @@ from django.utils import timezone
 from apps.assistant.models import AIJob, AIResponse, PromptTemplate, TextExplanation
 from apps.assistant.services.providers import _get_provider
 from apps.wallet.services import reserve_credits, charge_reserved_usage, fail_usage
+from apps.assistant.schemas.prompts import build_user_prompt
 
 REQUIRED_KEYS = {
     "text_type",
@@ -21,10 +22,11 @@ REQUIRED_KEYS = {
 }
 
 
-def explain_text(user, input_text, output_language="darija_arabic", ai_job=None):
+def explain_text(user, input_text, user_instruction, output_language="darija_arabic", ai_job=None):
     if not user or not user.is_authenticated:
         raise ValidationError("Authentication required")
     text = (input_text or "").strip()
+    instruction = (user_instruction or "").strip()
     if not text:
         raise ValidationError("المرجو لسق نص باش نشرحو ليك.")
     if len(text) < 10:
@@ -36,6 +38,7 @@ def explain_text(user, input_text, output_language="darija_arabic", ai_job=None)
     tmpl = PromptTemplate.objects.filter(name="text_explanation", active=True).order_by("-updated_at").first()
     if not tmpl:
         raise ValidationError("Prompt template unavailable")
+    user_text = build_user_prompt(extracted_text=text, custom_instruction=instruction)
 
     usage = reserve_credits(user=user, amount=1, event_type="text_explanation", reference_type="text")
     provider_name = getattr(settings, "DEFAULT_LLM_PROVIDER", "mock")
@@ -70,7 +73,7 @@ def explain_text(user, input_text, output_language="darija_arabic", ai_job=None)
         job.save(update_fields=["status", "updated_at"])
         provider = _get_provider(provider_name)
         user_prompt = tmpl.user_prompt_template.replace("{{input_text}}", text)
-        raw = provider.generate(tmpl.system_prompt, user_prompt, model_name)
+        raw = provider.generate(tmpl.system_prompt, user_prompt, instruction, model_name)
         parsed = parse_payload(raw)
         if parsed is None:
             raw = provider.generate("You repair invalid JSON outputs. Return valid JSON only.", f"Repair JSON: {raw}", model_name)
