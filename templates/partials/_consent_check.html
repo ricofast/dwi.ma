@@ -1,0 +1,18 @@
+{% comment %}
+Document processing consent checkbox.
+Usage: {% include "partials/_consent_check.html" %}
+{% endcomment %}
+<div class="dw-card" style="background:var(--dw-teal-50);border-color:var(--dw-teal-200);padding:1rem;">
+  <div style="display:flex;gap:0.75rem;align-items:flex-start;">
+    <input class="form-check-input" type="checkbox" name="consent_accepted" value="true" id="id_consent" required
+           style="width:22px;height:22px;margin-top:2px;flex-shrink:0;border-radius:6px;border:2px solid var(--dw-teal-400);cursor:pointer;">
+    <label for="id_consent" style="cursor:pointer;">
+      <p style="margin:0;font-size:0.875rem;font-weight:600;color:var(--dw-teal-800);">
+        كنوافق أن dwi.ma يعالج هاد الوثيقة باش يشرحها ليا.
+      </p>
+      <p style="margin:0.25rem 0 0;font-size:0.8125rem;color:var(--dw-teal-600);">
+        هاد الخدمة غير للمساعدة وماشي استشارة قانونية أو طبية أو مالية رسمية. نقدر نمسح الوثيقة من بعد.
+      </p>
+    </label>
+  </div>
+</div>

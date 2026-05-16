@@ -11,6 +11,9 @@ from apps.assistant.models import PromptTemplate
 
 REQUIRED_KEYS = {"document_type", "short_summary_darija", "important_points_darija", "extracted_entities", "unclear_points_darija", "next_steps_darija", "disclaimer_darija", "full_answer_darija"}
 
+OPENAI_API_KEY = settings.OPENAI_KEY
+GEMINI_API_KEY = settings.GEMINIAPI_KEY
+ANTHROPIC_API_KEY = settings.ANTHROPIC_API_KEY
 
 class BaseLLMProvider(ABC):
     @abstractmethod

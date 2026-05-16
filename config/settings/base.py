@@ -20,6 +20,19 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",
+    "django.contrib.humanize",
+    # "allauth",
+    # "allauth.account",
+    # "allauth.socialaccount",
+    # "allauth.socialaccount.providers.apple",
+    # "allauth.socialaccount.providers.facebook",
+    # "allauth.socialaccount.providers.google",
+    # "allauth.socialaccount.providers.twitter",
+    # "allauth.socialaccount.providers.instagram",
+    # "allauth.socialaccount.providers.telegram",
+    "crispy_forms",
+    "crispy_bootstrap5",
     "apps.accounts",
     "apps.wallet",
     "apps.payments",
@@ -39,6 +52,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # "allauth.account.middleware.AccountMiddleware",
 ]
 ADMIN_URL = env.str("DJANGO_ADMIN_URL")
 ROOT_URLCONF = "config.urls"
@@ -51,9 +65,12 @@ TEMPLATES = [
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.media",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.core.context_processors.credit_balance",
             ],
         },
     },
@@ -84,12 +101,23 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",
+    # "allauth.account.auth_backends.AuthenticationBackend",
+)
+
+# SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# ACCOUNT_EMAIL_VERIFICATION = "optional"
+
+SITE_ID = 1
+
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATICFILES_DIRS = [BASE_DIR / "staticfiles"]
 STATIC_ROOT = BASE_DIR / "static"
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -107,7 +135,7 @@ DEFAULT_FREE_CREDITS = env.int("DEFAULT_FREE_CREDITS", default=3)
 DOCUMENT_MAX_UPLOAD_MB = env.int("DOCUMENT_MAX_UPLOAD_MB", default=10)
 ALLOWED_DOCUMENT_EXTENSIONS = [e.strip() for e in env.str("ALLOWED_DOCUMENT_EXTENSIONS", default="pdf,jpg,jpeg,png,webp").split(",") if e.strip()]
 
-LOGIN_URL = "login"
+LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "landing"
 
@@ -149,3 +177,35 @@ AUDIO_ORIGINAL_RETENTION_DAYS = env.int("AUDIO_ORIGINAL_RETENTION_DAYS", default
 DELETE_EXTRACTED_TEXT_ON_DOCUMENT_DELETE = env.bool("DELETE_EXTRACTED_TEXT_ON_DOCUMENT_DELETE", default=True)
 DELETE_TRANSCRIPT_ON_AUDIO_DELETE = env.bool("DELETE_TRANSCRIPT_ON_AUDIO_DELETE", default=True)
 DELETE_AI_RESULTS_ON_SOURCE_DELETE = env.bool("DELETE_AI_RESULTS_ON_SOURCE_DELETE", default=False)
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+
+CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+# Provider specific settings
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        # For each OAuth based provider, either add a ``SocialApp``
+        # (``socialaccount`` app) containing the required client
+        # credentials, or list them here:
+        'APP': {
+            'client_id': '123',
+            'secret': '456',
+            'key': ''
+        }
+    }
+}
+
+# Required credits per operation
+CREDITS_COST_DOCUMENT_EXPLANATION = 2
+CREDITS_COST_MESSAGE_GENERATION = 1
+CREDITS_COST_TEXT_EXPLANATION = 1
+CREDITS_COST_VOICE_MESSAGE = 1
+
+# LLM providers and Models
+DEFAULT_LLM_PROVIDER = "gemini"
+DEFAULT_LLM_MODEL = "gemini-3.1-pro"
+
+OPENAI_KEY = env.str("DJANGO_OPENAI")
+GEMINIAPI_KEY = env.str("DJANGO_GEMINIAPI")
+ANTHROPIC_API_KEY = env.str("DJANGO_ANTHROPICAPI")

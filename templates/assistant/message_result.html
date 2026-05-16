@@ -1,1 +1,87 @@
-{% extends "base.html" %}{% block content %}<h3>النتيجة</h3><p>{{ result.generated_message }}</p><button class="btn btn-outline-secondary">نسخ الرسالة</button>{% endblock %}
+{% extends "base_auth.html" %}
+{% block title %}الرسالة جاهزة · dwi.ma{% endblock %}
+
+{% block content %}
+<div class="dw-stack dw-gap-lg">
+
+  <section class="dw-fade-in">
+    <a href="{% url 'assistant:generate_message_form' %}" class="dw-btn dw-btn-ghost dw-btn-sm" style="margin:-0.25rem -0.5rem 0.25rem;color:var(--dw-gray-500);">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      كتب رسالة أخرى
+    </a>
+    <h1 class="dw-display-sm" style="margin:0;">الرسالة جاهزة</h1>
+  </section>
+
+  {% if job.status == 'completed' and result %}
+
+  <!-- Generated message -->
+  <section class="dw-card dw-fade-in dw-stagger-1" style="padding:0;">
+
+    {% if result.target_format %}
+    <div style="padding:0.75rem 1.25rem;border-bottom:1px solid var(--dw-gray-100);">
+      <span class="dw-badge dw-badge-info">
+        {% if result.target_format == 'professional_french_email' %}إيميل مهني بالفرنسية
+        {% elif result.target_format == 'professional_arabic_message' %}رسالة مهنية بالعربية
+        {% elif result.target_format == 'polished_darija_whatsapp' %}واتساب بدارجة مزيانة
+        {% elif result.target_format == 'short_reply' %}جواب قصير
+        {% else %}{{ result.target_format }}{% endif %}
+      </span>
+    </div>
+    {% endif %}
+
+    <div id="generated-message" style="padding:1.25rem;line-height:1.75;font-size:0.9375rem;color:var(--dw-gray-800);white-space:pre-wrap;word-break:break-word;"
+         {% if result.target_format == 'professional_french_email' %}dir="ltr" style="padding:1.25rem;line-height:1.75;font-size:0.9375rem;color:var(--dw-gray-800);white-space:pre-wrap;word-break:break-word;text-align:left;"{% endif %}
+    >{{ result.generated_message }}</div>
+  </section>
+
+  <!-- Original input preview (collapsed) -->
+  {% if result.original_text or job.input_preview %}
+  <section class="dw-fade-in dw-stagger-1" x-data="{ show: false }">
+    <button type="button" @click="show = !show" class="dw-row dw-gap-sm" style="background:none;border:none;cursor:pointer;padding:0;color:var(--dw-gray-500);font-size:0.8125rem;font-weight:500;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="show && 'transform:rotate(180deg)'" style="transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
+      <span x-text="show ? 'خبي النص الأصلي' : 'شوف النص الأصلي'">شوف النص الأصلي</span>
+    </button>
+    <div x-show="show" x-collapse style="margin-top:0.5rem;">
+      <div class="dw-card" style="background:var(--dw-gray-50);padding:1rem;">
+        <p style="margin:0;font-size:0.8125rem;color:var(--dw-gray-500);line-height:1.6;">{{ result.original_text|default:job.input_preview }}</p>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Actions -->
+  <section class="dw-stack dw-gap-sm dw-fade-in dw-stagger-2">
+    <div class="dw-row dw-gap-sm">
+      <button type="button" class="dw-btn dw-btn-secondary" style="flex:1;"
+              onclick="copyToClipboard(document.getElementById('generated-message').innerText, this)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        نسخ الرسالة
+      </button>
+      {% include "partials/_whatsapp_send.html" with job_id=job.id %}
+    </div>
+    <a href="{% url 'assistant:generate_message_form' %}" class="dw-btn dw-btn-outline dw-btn-block">كتب رسالة أخرى</a>
+  </section>
+
+  <!-- Feedback -->
+  <section class="dw-fade-in dw-stagger-3">
+    {% include "partials/_feedback_buttons.html" with job_id=job.id %}
+  </section>
+
+  {% elif job.status == 'failed' %}
+  <section class="dw-card dw-fade-in dw-stagger-1" style="background:#fef2f2;border-color:#fecaca;text-align:center;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--dw-danger)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 0.75rem;display:block;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    <p style="margin:0;font-weight:600;color:var(--dw-danger);">ما قدرناش نكتبو الرسالة</p>
+    <p class="dw-text-sm dw-text-muted" style="margin:0.5rem 0 0;">{{ job.error_message|default:"جرب مرة أخرى" }}</p>
+    <a href="{% url 'assistant:generate_message_form' %}" class="dw-btn dw-btn-secondary" style="margin-top:1rem;">جرب مرة أخرى</a>
+  </section>
+
+  {% else %}
+  <section class="dw-card dw-fade-in dw-stagger-1" style="text-align:center;">
+    <div class="dw-spinner" style="margin:0 auto 0.75rem;"></div>
+    <p class="dw-text-muted" style="margin:0;">مازال كيتعالج...</p>
+    <a href="" class="dw-btn dw-btn-ghost dw-btn-sm" style="margin-top:0.5rem;">تحديث</a>
+  </section>
+  {% endif %}
+
+</div>
+{% endblock %}

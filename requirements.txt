@@ -8,3 +8,6 @@ pytest>=8.0.0
 pytest-django>=4.8.0
 pdfplumber>=0.11.9
 pymupdf>=1.27.2.3
+django-crispy-forms==2.6
+crispy-bootstrap5==2026.3
+django-allauth==65.16.1

@@ -10,4 +10,7 @@ urlpatterns = [
     path("accounts/", include("apps.accounts.urls", namespace="accounts")),
     path("whatsapp/", include("apps.whatsapp.urls")),
     path("assistant/", include("apps.assistant.urls", namespace="assistant")),
+    path("audio/", include("apps.audio.urls", namespace="audio")),
+    path("wallet/", include("apps.wallet.urls", namespace="wallet")),
+    path("payments/", include("apps.payments.urls", namespace="payments")),
 ]

@@ -1,20 +1,43 @@
-{% extends "base.html" %}
+{% extends "base_auth.html" %}
+{% block title %}شرح ليا وثيقة · dwi.ma{% endblock %}
+
 {% block content %}
-<div class="container py-3">
-  <h1 class="h4">شرح ليا وثيقة</h1>
-  <p class="small text-muted">كنوافق أن dwi.ma يعالج هاد الوثيقة باش يشرحها ليا.</p>
-  <div class="alert alert-info">هاد الخدمة غير للمساعدة وماشي استشارة قانونية أو طبية أو مالية رسمية.</div>
-  <form class="card card-body" method="post" enctype="multipart/form-data" action="/api/documents/upload">
-    <div class="mb-3">
-      <label class="form-label">الوثيقة</label>
-      <input class="form-control" type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.webp" required>
+<div class="dw-stack dw-gap-lg">
+
+  <section class="dw-fade-in">
+    <h1 class="dw-display-sm" style="margin:0;">شرح ليا وثيقة</h1>
+    <p class="dw-body" style="margin:0.25rem 0 0;">طلع PDF ولا صورة و dwi.ma يشرحها ليك بدارجة بسيطة</p>
+  </section>
+
+  <form method="post" enctype="multipart/form-data" class="dw-stack dw-gap-md dw-fade-in dw-stagger-1">
+    {% csrf_token %}
+
+    <!-- File input -->
+    <div class="dw-card" x-data="{ fileName: '' }">
+      <label class="dw-form-label">اختار الوثيقة</label>
+      <div style="position:relative;margin-top:0.375rem;">
+        <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.webp" required
+               class="dw-input" style="cursor:pointer;"
+               @change="fileName = $event.target.files[0]?.name || ''">
+      </div>
+      <p class="dw-form-hint">PDF, JPG, PNG, WEBP — حجم أقصى {{ max_upload_mb|default:"10" }} ميغا</p>
     </div>
-    <div class="form-check mb-3">
-      <input class="form-check-input" type="checkbox" name="consent_accepted" value="true" id="consent" required>
-      <label class="form-check-label" for="consent">وافقت على المعالجة</label>
+
+    <!-- Consent -->
+    {% include "partials/_consent_check.html" %}
+
+    <!-- Credit cost notice -->
+    <div class="dw-row dw-gap-sm" style="padding:0 0.25rem;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--dw-gray-400)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <span class="dw-text-sm" style="color: var(--dw-danger)">هاد العملية غادي تستعمل <strong style="color:var(--dw-teal-600);">{{credit}} كريدي</strong> — رصيدك: <strong style="color:var(--dw-teal-600);">{{ balance }}</strong></span>
     </div>
-    <input type="hidden" name="source" value="pwa">
-    <button class="btn btn-primary w-100" type="submit">رفع الوثيقة</button>
+
+    <!-- Submit -->
+    <button type="submit" class="dw-btn dw-btn-primary dw-btn-block dw-btn-lg">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      رفع الوثيقة
+    </button>
   </form>
+
 </div>
 {% endblock %}

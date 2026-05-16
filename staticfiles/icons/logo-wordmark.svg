@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" height="80">
+  <!-- dwi.ma wordmark — geometric construction, no font dependency -->
+
+  <!-- "d" -->
+  <g transform="translate(0, 0)">
+    <!-- stem -->
+    <rect x="38" y="0" width="10" height="72" rx="5" fill="#0b6b58"/>
+    <!-- bowl -->
+    <path d="M43 18 C24 18, 8 32, 8 46 C8 60, 24 72, 43 72"
+          fill="none" stroke="#0b6b58" stroke-width="10" stroke-linecap="round"/>
+  </g>
+
+  <!-- "w" -->
+  <g transform="translate(60, 18)">
+    <path d="M5 0 L14 54 L25 20 L36 54 L45 0"
+          fill="none" stroke="#0b6b58" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- "i" -->
+  <g transform="translate(116, 0)">
+    <!-- dot -->
+    <circle cx="5" cy="8" r="6" fill="#0b6b58"/>
+    <!-- stem -->
+    <rect x="0" y="20" width="10" height="52" rx="5" fill="#0b6b58"/>
+  </g>
+
+  <!-- Amber dot separator — the brand mark -->
+  <circle cx="148" cy="62" r="9" fill="#f5a623"/>
+  <!-- Inner zellige star -->
+  <path d="M148 56.5L149.5 60L153.5 62L149.5 64L148 67.5L146.5 64L142.5 62L146.5 60Z" fill="#e09100" opacity="0.4"/>
+  <circle cx="148" cy="62" r="2.5" fill="#fff" opacity="0.8"/>
+
+  <!-- "m" -->
+  <g transform="translate(166, 18)">
+    <!-- left stem -->
+    <rect x="0" y="0" width="10" height="54" rx="5" fill="#0b6b58"/>
+    <!-- first hump -->
+    <path d="M5 12 C5 2, 22 -2, 30 8"
+          fill="none" stroke="#0b6b58" stroke-width="10" stroke-linecap="round"/>
+    <!-- middle stem -->
+    <rect x="25" y="8" width="10" height="46" rx="5" fill="#0b6b58"/>
+    <!-- second hump -->
+    <path d="M30 12 C30 2, 47 -2, 55 8"
+          fill="none" stroke="#0b6b58" stroke-width="10" stroke-linecap="round"/>
+    <!-- right stem -->
+    <rect x="50" y="8" width="10" height="46" rx="5" fill="#0b6b58"/>
+  </g>
+
+  <!-- "a" -->
+  <g transform="translate(234, 18)">
+    <!-- bowl -->
+    <path d="M38 16 C38 4, 24 -2, 12 2 C0 6, -4 18, 4 30 C10 40, 24 42, 38 36"
+          fill="none" stroke="#0b6b58" stroke-width="10" stroke-linecap="round"/>
+    <!-- right stem -->
+    <rect x="33" y="0" width="10" height="54" rx="5" fill="#0b6b58"/>
+  </g>
+</svg>

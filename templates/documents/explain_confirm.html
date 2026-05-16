@@ -1,1 +1,53 @@
-{% extends 'base.html' %}{% block content %}<div class='container py-3'><h4>شرح ليا الوثيقة</h4><p>هاد العملية غادي تستهلك 1 كريدي.</p><p>الرصيد الحالي: {{ balance }}</p><p>الملف: {{ document.original_filename }}</p></div>{% endblock %}
+{% extends "base_auth.html" %}
+{% block title %}شرح الوثيقة · dwi.ma{% endblock %}
+
+{% block content %}
+<div class="dw-stack dw-gap-lg">
+
+  <section class="dw-fade-in">
+    <a href="{% url 'document:document_detail' document_id=document.id %}" class="dw-btn dw-btn-ghost dw-btn-sm" style="margin:-0.25rem -0.5rem 0.25rem;color:var(--dw-gray-500);">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      {{ document.original_filename }}
+    </a>
+    <h1 class="dw-display-sm" style="margin:0;">شرح ليا الوثيقة</h1>
+  </section>
+
+  <!-- Confirmation card -->
+  <section class="dw-card dw-fade-in dw-stagger-1">
+    <div class="dw-stack dw-gap-sm">
+      <div class="dw-row dw-gap-md">
+        <div class="dw-card-icon dw-card-icon-teal">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <p style="margin:0;font-weight:600;color:var(--dw-gray-900);word-break:break-word;">{{ document.original_filename }}</p>
+          <p class="dw-text-sm dw-text-muted" style="margin:0.125rem 0 0;">{{ document.file_size|filesizeformat }} · {{ document.file_type|upper }}</p>
+        </div>
+      </div>
+
+      <hr class="dw-divider" style="margin:0.5rem 0;">
+
+      <div class="dw-row" style="justify-content:space-between;">
+        <span class="dw-text-sm" style="color:var(--dw-gray-600);">التكلفة</span>
+        <span style="font-weight:600;color:var(--dw-gray-900);">1 كريدي</span>
+      </div>
+      <div class="dw-row" style="justify-content:space-between;">
+        <span class="dw-text-sm" style="color:var(--dw-gray-600);">رصيدك الحالي</span>
+        <span style="font-weight:600;color:var(--dw-teal-600);">{{ balance }} كريدي</span>
+      </div>
+    </div>
+  </section>
+
+  {% include "partials/_disclaimer.html" %}
+
+  <!-- Action -->
+  <section class="dw-fade-in dw-stagger-2">
+    <a href="/api/documents/{{ document.id }}/explain/"
+       class="dw-btn dw-btn-primary dw-btn-block dw-btn-lg">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      شرح ليا بدارجة
+    </a>
+  </section>
+
+</div>
+{% endblock %}

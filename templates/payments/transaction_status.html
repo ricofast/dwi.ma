@@ -1,9 +1,92 @@
-{% extends "base.html" %}
+{% extends "base_auth.html" %}
+{% block title %}حالة الأداء · dwi.ma{% endblock %}
+
 {% block content %}
-<div class="container py-4">
-  <h1 class="h4">شحن الرصيد</h1>
-  <p>اختار الباقة - كريدي - خلص بالتليفون</p>
-  <p>تم الأداء بنجاح / ما تكملش الأداء</p>
-  <a href="/dashboard/" class="btn btn-primary">رجع للداشبورد</a>
+<div class="dw-stack dw-gap-lg" style="align-items:center;text-align:center;padding-top:1.5rem;">
+
+  {% if transaction.status == 'paid' %}
+  <!-- Success state -->
+  <div class="dw-fade-in">
+    <div style="width:64px;height:64px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--dw-success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h1 class="dw-display-sm" style="margin:0;color:var(--dw-success);">تم الأداء بنجاح!</h1>
+    <p class="dw-body dw-text-muted" style="margin:0.5rem 0 0;">تزاد ليك <strong style="color:var(--dw-gray-800);">{{ transaction.credits_to_add }} كريدي</strong></p>
+  </div>
+
+  <div class="dw-stack dw-gap-sm dw-fade-in dw-stagger-1" style="width:100%;">
+    <a href="{% url 'dashboard' %}" class="dw-btn dw-btn-primary dw-btn-block dw-btn-lg">رجع للرئيسية</a>
+    <a href="{% url 'wallet:balance' %}" class="dw-btn dw-btn-outline dw-btn-block">شوف الرصيد</a>
+  </div>
+
+  {% elif transaction.status == 'failed' or transaction.status == 'cancelled' or transaction.status == 'expired' %}
+  <!-- Failed state -->
+  <div class="dw-fade-in">
+    <div style="width:64px;height:64px;border-radius:50%;background:#fef2f2;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--dw-danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    </div>
+    <h1 class="dw-display-sm" style="margin:0;color:var(--dw-danger);">ما تكملش الأداء</h1>
+    <p class="dw-body dw-text-muted" style="margin:0.5rem 0 0;">{{ transaction.failure_reason|default:"الأداء ما كملش. جرب مرة أخرى." }}</p>
+  </div>
+
+  <div class="dw-stack dw-gap-sm dw-fade-in dw-stagger-1" style="width:100%;">
+    <a href="{% url 'payments:products' %}" class="dw-btn dw-btn-primary dw-btn-block dw-btn-lg">جرب مرة أخرى</a>
+    <a href="{% url 'dashboard' %}" class="dw-btn dw-btn-outline dw-btn-block">رجع للرئيسية</a>
+  </div>
+
+  {% else %}
+  <!-- Pending / processing state -->
+  <div class="dw-fade-in">
+    <div class="dw-spinner dw-spinner-lg" style="margin:0 auto 1rem;"></div>
+    <h1 class="dw-display-sm" style="margin:0;">كنتسناو الأداء...</h1>
+    <p class="dw-body dw-text-muted" style="margin:0.5rem 0 0;">هاد الصفحة غادي تتحدث تلقائياً</p>
+  </div>
+
+  <div id="tx-poll"
+       hx-get="/api/payments/transactions/{{ transaction.id }}"
+       hx-trigger="every 4s"
+       hx-target="#tx-poll"
+       hx-swap="innerHTML"
+       class="dw-fade-in dw-stagger-1">
+    {% include "partials/_status_badge.html" with status=transaction.status %}
+  </div>
+
+  <!-- Transaction details -->
+  <div class="dw-card dw-fade-in dw-stagger-2" style="width:100%;text-align:start;">
+    <div class="dw-stack dw-gap-xs">
+      <div class="dw-row" style="justify-content:space-between;">
+        <span class="dw-label">المبلغ</span>
+        <span class="dw-text-sm" style="font-weight:600;color:var(--dw-gray-800);">{{ transaction.amount }} {{ transaction.currency }}</span>
+      </div>
+      <div class="dw-row" style="justify-content:space-between;">
+        <span class="dw-label">كريديات</span>
+        <span class="dw-text-sm" style="font-weight:600;color:var(--dw-teal-600);">+{{ transaction.credits_to_add }}</span>
+      </div>
+    </div>
+  </div>
+
+  {% if transaction.provider_payment_url %}
+  <a href="{{ transaction.provider_payment_url }}" class="dw-btn dw-btn-primary dw-btn-block dw-fade-in dw-stagger-3">كمل الأداء</a>
+  {% endif %}
+  {% endif %}
+
 </div>
+
+{% if transaction.status == 'pending' or transaction.status == 'initiated' %}
+{% block extra_js %}
+<script>
+document.body.addEventListener('htmx:afterRequest', function(evt) {
+  if (evt.detail.target && evt.detail.target.id !== 'tx-poll') return;
+  try {
+    var data = JSON.parse(evt.detail.xhr.responseText);
+    if (data.status === 'paid') {
+      window.location.href = '{% url "payments:success" %}?tx={{ transaction.id }}';
+    } else if (data.status === 'failed' || data.status === 'cancelled' || data.status === 'expired') {
+      window.location.href = '{% url "payments:failed" %}?tx={{ transaction.id }}';
+    }
+  } catch(e) {}
+});
+</script>
+{% endblock %}
+{% endif %}
 {% endblock %}

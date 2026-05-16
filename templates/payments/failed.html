@@ -1,9 +1,45 @@
-{% extends "base.html" %}
+{% extends "base_auth.html" %}
+{% block title %}فشل الأداء · dwi.ma{% endblock %}
+
 {% block content %}
-<div class="container py-4">
-  <h1 class="h4">شحن الرصيد</h1>
-  <p>اختار الباقة - كريدي - خلص بالتليفون</p>
-  <p>تم الأداء بنجاح / ما تكملش الأداء</p>
-  <a href="/dashboard/" class="btn btn-primary">رجع للداشبورد</a>
+<div class="dw-stack dw-gap-lg" style="align-items:center;text-align:center;padding-top:2rem;">
+
+  <div class="dw-fade-in">
+    <div style="width:72px;height:72px;border-radius:50%;background:#fef2f2;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--dw-danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    </div>
+    <h1 class="dw-display-sm" style="margin:0;color:var(--dw-danger);">ما تكملش الأداء</h1>
+
+    {% if transaction %}
+    <p class="dw-body dw-text-muted" style="margin:0.75rem 0 0;">
+      {{ transaction.failure_reason|default:"الأداء ما كملش بنجاح. ما خسرتي والو — جرب مرة أخرى." }}
+    </p>
+    {% else %}
+    <p class="dw-body dw-text-muted" style="margin:0.75rem 0 0;">
+      الأداء ما كملش بنجاح. ما خسرتي والو — جرب مرة أخرى.
+    </p>
+    {% endif %}
+  </div>
+
+  <!-- Reassurance -->
+  <div class="dw-card dw-fade-in dw-stagger-1" style="width:100%;text-align:start;">
+    <div class="dw-row dw-gap-md">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--dw-info)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <div>
+        <p style="margin:0;font-size:0.875rem;font-weight:500;color:var(--dw-gray-800);">ما خسرتي حتى فلوس</p>
+        <p style="margin:0.125rem 0 0;font-size:0.8125rem;color:var(--dw-gray-500);">إلى ما كملش الأداء، ما كيتقطع والو من حسابك.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="dw-stack dw-gap-sm dw-fade-in dw-stagger-2" style="width:100%;">
+    <a href="{% url 'payments:products' %}" class="dw-btn dw-btn-primary dw-btn-block dw-btn-lg">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      جرب مرة أخرى
+    </a>
+    <a href="{% url 'dashboard' %}" class="dw-btn dw-btn-outline dw-btn-block">رجع للرئيسية</a>
+  </div>
+
 </div>
 {% endblock %}

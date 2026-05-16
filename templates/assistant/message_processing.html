@@ -1,1 +1,18 @@
-{% extends "base.html" %}{% block content %}<p>Processing...</p>{% endblock %}
+{% extends "base_auth.html" %}
+{% block title %}كنكتبو الرسالة... · dwi.ma{% endblock %}
+
+{% block content %}
+<div class="dw-stack dw-gap-lg" style="align-items:center;text-align:center;padding-top:2rem;">
+
+  <div class="dw-fade-in">
+    <div class="dw-spinner dw-spinner-lg" style="margin:0 auto 1rem;"></div>
+    <h1 class="dw-display-sm" style="margin:0;">كنكتبو الرسالة...</h1>
+    <p class="dw-body dw-text-muted" style="margin:0.5rem 0 0;">غادي تكون جاهزة فثواني قليلة</p>
+  </div>
+
+  <div class="dw-fade-in dw-stagger-1">
+    {% include "partials/_status_badge.html" with status="processing" label="كيتعالج..." %}
+  </div>
+
+</div>
+{% endblock %}

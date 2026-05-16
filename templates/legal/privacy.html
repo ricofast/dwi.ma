@@ -1,0 +1,188 @@
+{% extends "base_public.html" %}
+{% load static %}
+
+
+{% block title %}سياسة الخصوصية · dwi.ma{% endblock %}
+
+
+
+{% block content %}
+<article class="dw-legal" style="max-width:600px;margin:0 auto;padding:2rem 0 3rem;">
+
+  <!-- Header -->
+  <header class="dw-fade-in" style="text-align:center;margin-bottom:2.5rem;">
+    <a href="{% url 'landing' %}" style="text-decoration:none;">
+      <img src="{% static 'icons/logo-wordmark.svg' %}" alt="dwi.ma" height="28">
+    </a>
+    <div style="width:48px;height:3px;background:var(--dw-teal-400);border-radius:2px;margin:1.25rem auto;"></div>
+    <h1 style="font-family:var(--dw-font-display);font-size:1.5rem;font-weight:700;color:var(--dw-gray-900);margin:0;">سياسة الخصوصية</h1>
+    <p style="font-size:0.8125rem;color:var(--dw-gray-400);margin:0.5rem 0 0;">آخر تحديث: ماي 2025</p>
+  </header>
+
+  <!-- Intro -->
+  <section class="dw-legal-section dw-fade-in dw-stagger-1">
+    <div class="dw-card" style="background:var(--dw-teal-50);border-color:var(--dw-teal-200);padding:1.25rem;">
+      <p style="margin:0;font-size:0.9375rem;line-height:1.7;color:var(--dw-teal-800);">
+        هاد الصفحة كتشرح ليك كيفاش dwi.ma كيحمي المعلومات ديالك. كتبناها بدارجة بسيطة باش تفهم كلشي.
+      </p>
+    </div>
+  </section>
+
+  <!-- Section 1 -->
+  <section class="dw-legal-section dw-fade-in dw-stagger-2">
+    <div class="dw-legal-num">1</div>
+    <h2 class="dw-legal-heading">شنو المعلومات لي كنجمعو؟</h2>
+    <div class="dw-legal-body">
+      <p>ملي كتسجل ولا كتستعمل dwi.ma، كنحفظو غير هاد المعلومات:</p>
+      <ul>
+        <li><strong>رقم الهاتف</strong> — باش تسجل و تدخل لحسابك</li>
+        <li><strong>الاسم</strong> — إلا بغيتي تزيدو (اختياري)</li>
+        <li><strong>الوثائق و النصوص</strong> — لي كتطلعهم باش نشرحوهم ليك</li>
+        <li><strong>التسجيلات الصوتية</strong> — لي كتطلعهم باش نحولوهم لنص</li>
+        <li><strong>سجل الاستعمال</strong> — شحال من مرة استعملتي الخدمة</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Section 2 -->
+  <section class="dw-legal-section">
+    <div class="dw-legal-num">2</div>
+    <h2 class="dw-legal-heading">كيفاش كنستعملو المعلومات ديالك؟</h2>
+    <div class="dw-legal-body">
+      <ul>
+        <li>باش نشرحو ليك الوثائق و النصوص بدارجة</li>
+        <li>باش نكتبو ليك رسائل مهنية</li>
+        <li>باش نحولو التسجيلات الصوتية لنص مكتوب</li>
+        <li>باش نحسنو الخدمة و نصلحو المشاكل</li>
+      </ul>
+      <p><strong>ما كنبيعو ولا كنشاركو المعلومات ديالك مع حتا شي واحد.</strong></p>
+    </div>
+  </section>
+
+  <!-- Section 3 -->
+  <section class="dw-legal-section">
+    <div class="dw-legal-num">3</div>
+    <h2 class="dw-legal-heading">الوثائق و التسجيلات الصوتية</h2>
+    <div class="dw-legal-body">
+      <ul>
+        <li>الوثائق و التسجيلات كيتعالجو غير باش نعطيوك النتيجة</li>
+        <li>التسجيلات الصوتية كيتمسحو بعد المعالجة</li>
+        <li>تقدر تمسح أي وثيقة من حسابك وقتما بغيتي</li>
+        <li>كنستعملو خدمات خارجية (بحال OpenAI) باش نعالجو النصوص — بالتشفير و بلا ما نشاركو الهوية ديالك</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Section 4 -->
+  <section class="dw-legal-section">
+    <div class="dw-legal-num">4</div>
+    <h2 class="dw-legal-heading">الحماية و الأمان</h2>
+    <div class="dw-legal-body">
+      <ul>
+        <li>كلمات السر كيتشفرو و ما كنشوفوهمش</li>
+        <li>الاتصال بين التطبيق و السيرفر محمي بـ HTTPS</li>
+        <li>كنحفظو غير المعلومات الضرورية و كنمسحو لي ما بقاتش لازمة</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Section 5 -->
+  <section class="dw-legal-section">
+    <div class="dw-legal-num">5</div>
+    <h2 class="dw-legal-heading">الحقوق ديالك</h2>
+    <div class="dw-legal-body">
+      <p>عندك الحق:</p>
+      <ul>
+        <li>تشوف المعلومات لي عندنا عليك</li>
+        <li>تطلب تمسح حسابك و كلشي معاه</li>
+        <li>توقف استعمال الخدمة وقتما بغيتي</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Section 6 -->
+  <section class="dw-legal-section">
+    <div class="dw-legal-num">6</div>
+    <h2 class="dw-legal-heading">التواصل معانا</h2>
+    <div class="dw-legal-body">
+      <p>إلا عندك شي سؤال على الخصوصية، راسلنا على:</p>
+      <div class="dw-card" style="padding:0.875rem 1rem;margin-top:0.5rem;">
+        <p style="margin:0;font-size:0.875rem;" dir="ltr"><strong>privacy@dwi.ma</strong></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- French summary -->
+  <section class="dw-legal-section" style="margin-top:2rem;">
+    <div class="dw-card" style="background:var(--dw-gray-50);padding:1.25rem;">
+      <p style="margin:0 0 0.5rem;font-size:0.75rem;font-weight:600;color:var(--dw-gray-400);text-transform:uppercase;letter-spacing:0.05em;">Résumé en français</p>
+      <p style="margin:0;font-size:0.8125rem;line-height:1.7;color:var(--dw-gray-600);" dir="ltr">
+        dwi.ma collecte uniquement les données nécessaires au fonctionnement du service (numéro de téléphone, documents soumis, enregistrements audio). Les fichiers audio sont supprimés après traitement. Vos données ne sont ni vendues ni partagées. Vous pouvez demander la suppression de votre compte à tout moment en nous contactant à privacy@dwi.ma.
+      </p>
+    </div>
+  </section>
+
+  <!-- Back link -->
+  <div style="text-align:center;margin-top:2rem;">
+    <a href="{% url 'landing' %}" class="dw-btn dw-btn-ghost">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      رجع للرئيسية
+    </a>
+  </div>
+
+</article>
+
+<style>
+.dw-legal-section {
+  margin-top:1.75rem;
+  position: relative;
+}
+.dw-legal-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--dw-teal-600);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+.dw-legal-heading {
+  font-family: var(--dw-font-display);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--dw-gray-900);
+  margin: 0 0 0.625rem;
+  line-height: 1.4;
+}
+.dw-legal-body {
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: var(--dw-gray-700);
+}
+.dw-legal-body p {
+  margin: 0 0 0.75rem;
+}
+.dw-legal-body p:last-child {
+  margin-bottom: 0;
+}
+.dw-legal-body ul {
+  margin: 0.5rem 0;
+  padding-inline-start: 1.25rem;
+}
+.dw-legal-body li {
+  margin-bottom: 0.375rem;
+  padding-inline-start: 0.25rem;
+}
+.dw-legal-body li::marker {
+  color: var(--dw-teal-400);
+}
+.dw-legal-body strong {
+  color: var(--dw-gray-800);
+  font-weight: 600;
+}
+</style>
+{% endblock %}

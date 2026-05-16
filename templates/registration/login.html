@@ -1,11 +1,64 @@
-{% extends "base.html" %}
+{% extends "base_public.html" %}
+{% load static %}
+
+{% block title %}دخل · dwi.ma{% endblock %}
+
+
 {% block content %}
-<div class="container py-4">
-  <h1>Login</h1>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Login</button>
-  </form>
+<div class="dw-stack dw-gap-lg" style="max-width:400px;margin:0 auto;padding-top:2rem;">
+
+  <!-- Brand -->
+  <div class="dw-fade-in" style="text-align:center;">
+    <a href="{% url 'landing' %}" style="text-decoration:none;">
+      <img src="{% static 'icons/logo-wordmark.svg' %}" alt="dwi.ma" height="28">
+    </a>
+    <p class="dw-body dw-text-muted" style="margin:0.5rem 0 0;">فهم الوثائق و كتابة الرسائل بدارجة</p>
+  </div>
+
+  <!-- Login form -->
+  <div class="dw-card dw-fade-in dw-stagger-1" style="padding:1.5rem;">
+    <h1 style="font-size:1.25rem;font-weight:600;color:var(--dw-gray-900);margin:0 0 1.25rem;text-align:center;">دخل لحسابك</h1>
+
+    {% if form.non_field_errors %}
+    <div style="padding:0.75rem 1rem;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--dw-radius-md);margin-bottom:1rem;">
+      {% for error in form.non_field_errors %}
+      <p style="margin:0;font-size:0.875rem;color:var(--dw-danger);">{{ error }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" class="dw-stack dw-gap-md">
+      {% csrf_token %}
+
+      <div class="dw-form-group" style="margin:0;">
+        <label class="dw-form-label" for="id_username">رقم الهاتف</label>
+        {{ form.username }}
+        {% if form.username.errors %}
+        <p class="dw-form-hint" style="color:var(--dw-danger);">{{ form.username.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <div class="dw-form-group" style="margin:0;">
+        <label class="dw-form-label" for="id_password">كلمة السر</label>
+        {{ form.password }}
+        {% if form.password.errors %}
+        <p class="dw-form-hint" style="color:var(--dw-danger);">{{ form.password.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="dw-btn dw-btn-primary dw-btn-block dw-btn-lg">
+        دخل
+      </button>
+    </form>
+  </div>
+
+  <!-- Register link -->
+  <div class="dw-fade-in dw-stagger-2" style="text-align:center;">
+    <p class="dw-text-sm dw-text-muted" style="margin:0;">
+      ما عندكش حساب؟
+      <a href="{% url 'accounts:register' %}" style="color:var(--dw-teal-600);font-weight:600;text-decoration:none;">سجل دابا</a>
+    </p>
+  </div>
+
 </div>
 {% endblock %}

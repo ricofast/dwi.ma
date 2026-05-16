@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="42%" r="55%">
+      <stop offset="0%" stop-color="#0d9b7a" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#064a3b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="192" height="192" rx="42" fill="#0b6b58"/>
+  <rect width="192" height="192" rx="42" fill="url(#g)"/>
+
+  <!-- Letter "d" — simplified for small size -->
+  <g transform="translate(36, 37)">
+    <rect x="75" y="0" width="17" height="118" rx="8.5" fill="#fff"/>
+    <path d="M83.5 27 C83.5 27, 83.5 27, 83.5 27
+             C52 27, 27 51, 27 77
+             C27 103, 52 118, 83.5 118"
+          fill="none" stroke="#fff" stroke-width="17" stroke-linecap="round"/>
+  </g>
+
+  <!-- Amber dot with star -->
+  <circle cx="138" cy="134" r="17" fill="#f5a623"/>
+  <path d="M138 125L140 131L147 134L140 137L138 143L136 137L129 134L136 131Z" fill="#e09100" opacity="0.35"/>
+  <circle cx="138" cy="134" r="4" fill="#fff" opacity="0.85"/>
+</svg>
