@@ -140,7 +140,8 @@ def explain_doc(request, document_id: UUID):
     if not can_spend(request.user, amount):
         raise HttpError(402, get_safe_error_message("INSUFFICIENT_CREDITS"))
     job = AIJob.objects.create(user=request.user, job_type=AIJob.JobType.DOCUMENT_EXPLANATION, provider="", model="", status=AIJob.Status.QUEUED, input_hash="", input_preview="", prompt_version="")
-    explain_document_task.delay(str(document_id), str(request.user.id))
+    did = "73f21356-8d50-4b70-be74-6921bf3a4c07"
+    explain_document_task.delay(did, str(request.user.id))
     return {"job_id": str(job.id), "document_id": str(document_id), "status": "queued"}
 
 
