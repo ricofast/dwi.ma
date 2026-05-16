@@ -156,6 +156,10 @@ ALLOWED_AUDIO_EXTENSIONS = [e.strip() for e in env.str("ALLOWED_AUDIO_EXTENSIONS
 TRANSCRIPTION_PROVIDER = env.str("TRANSCRIPTION_PROVIDER", default="mock")
 TRANSCRIPTION_MODEL = env.str("TRANSCRIPTION_MODEL", default="mock-transcribe")
 OPENAI_API_KEY = env.str("OPENAI_API_KEY", default="")
+ANTHROPIC_API_KEY = env.str("ANTHROPIC_API_KEY", default="")
+GEMINI_API_KEY = env.str("GEMINI_API_KEY", default="")
+DEFAULT_LLM_PROVIDER = env.str("DEFAULT_LLM_PROVIDER", default="mock")
+DEFAULT_LLM_MODEL = env.str("DEFAULT_LLM_MODEL", default="mock-1")
 
 
 PAYMENT_PROVIDER = env.str("PAYMENT_PROVIDER", default="mock")
