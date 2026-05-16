@@ -150,7 +150,16 @@ CELERY_TASK_SOFT_TIME_LIMIT = 60
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 CELERY_TASK_ACKS_LATE = True
 
+# config/settings/base.py
 
+CELERY_TASK_ROUTES = {
+    "apps.documents.tasks.*": {"queue": "documents"},
+    "apps.assistant.tasks.*": {"queue": "ai"},
+    "apps.audio.tasks.*": {"queue": "audio"},
+    "apps.whatsapp.tasks.*": {"queue": "whatsapp"},
+    "apps.payments.tasks.*": {"queue": "payments"},
+    "apps.core.tasks.*": {"queue": "maintenance"},
+}
 
 DEFAULT_FREE_CREDITS = env.int("DEFAULT_FREE_CREDITS", default=3)
 
