@@ -11,6 +11,7 @@ from apps.wallet.services import charge_reserved_usage, fail_usage, reserve_cred
 
 def explain_document(document_id, user):
     document = UploadedDocument.objects.filter(id=document_id, user=user).first()
+    print(document.id)
     if not document:
         raise ValidationError("Document not found")
     if not hasattr(document, "extracted_text"):
@@ -27,6 +28,9 @@ def explain_document(document_id, user):
         document.status = UploadedDocument.Status.PROCESSING
         ai_job.save(update_fields=["status", "updated_at"])
         document.save(update_fields=["status", "updated_at"])
+        print("*************************************************************************")
+        print(document.extracted_text.text)
+        print("*************************************************************************")
         res = generate_document_explanation(document.extracted_text.text)
         ai_job.provider = res["provider"]
         ai_job.model = res["model"]
