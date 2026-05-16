@@ -128,7 +128,7 @@ class ExplainIn(BaseModel):
 @router.post("/documents/{document_id}/explain/")
 @router.get("/documents/{document_id}/explain")
 @router.get("/documents/{document_id}/explain/")
-def explain_doc(request, document_id: UUID, payload: ExplainIn):
+def explain_doc(request, document_id: UUID):
     require_auth(request)
     doc = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
     amount = int(getattr(settings, "CREDITS_COST_DOCUMENT_EXPLANATION", 2))
