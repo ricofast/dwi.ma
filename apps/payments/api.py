@@ -18,6 +18,7 @@ router = Router(tags=["payments"])
 
 class StartIn(Schema):
     product_code: str
+    consent_accepted: bool = False
 
 
 @router.get("/payments/products")
@@ -40,6 +41,12 @@ def products(request):
 @router.post("/payments/start")
 def start(request, payload: StartIn):
     user = require_auth(request)
+    if not payload.consent_accepted:
+        return 400, {"detail": "خاصك توافق على شروط الأداء"}
+    from apps.accounts.services.consent import log_consent
+    from apps.accounts.models import ConsentLog
+
+    log_consent(user=user, consent_type=ConsentLog.ConsentType.PAYMENT_TERMS, accepted=True, source="api", request=request, consent_text_snapshot="كنوافق على شروط الأداء واستعمال الكريديات.")
     try:
         tx = create_payment_transaction(user, payload.product_code)
     except ValueError as exc:

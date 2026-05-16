@@ -1,6 +1,8 @@
 import json
 import os
 from abc import ABC, abstractmethod
+from urllib import error as urlerror
+from urllib import request as urlrequest
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -23,23 +25,97 @@ class MockLLMProvider(BaseLLMProvider):
 
 class OpenAIProvider(BaseLLMProvider):
     def generate(self, system_prompt: str, user_prompt: str, model: str) -> str:
-        if not os.getenv("OPENAI_API_KEY"):
+        api_key = os.getenv("OPENAI_API_KEY") or getattr(settings, "OPENAI_API_KEY", "")
+        if not api_key:
             raise ValidationError("AI provider unavailable")
-        raise ValidationError("OpenAI provider not implemented yet")
+        payload = {
+            "model": model,
+            "input": [
+                {"role": "system", "content": [{"type": "input_text", "text": system_prompt}]},
+                {"role": "user", "content": [{"type": "input_text", "text": user_prompt}]},
+            ],
+            "text": {"format": {"type": "text"}},
+        }
+        req = urlrequest.Request(
+            url="https://api.openai.com/v1/responses",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urlrequest.urlopen(req, timeout=45) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+        except (urlerror.URLError, urlerror.HTTPError) as exc:
+            raise ValidationError(f"OpenAI request failed: {exc}")
+        text = data.get("output_text")
+        if text:
+            return text
+        output = data.get("output", [])
+        for item in output:
+            for content in item.get("content", []):
+                if content.get("type") in {"output_text", "text"} and content.get("text"):
+                    return content["text"]
+        raise ValidationError("OpenAI empty response")
 
 
 class AnthropicProvider(BaseLLMProvider):
     def generate(self, system_prompt: str, user_prompt: str, model: str) -> str:
-        if not os.getenv("ANTHROPIC_API_KEY"):
+        api_key = os.getenv("ANTHROPIC_API_KEY") or getattr(settings, "ANTHROPIC_API_KEY", "")
+        if not api_key:
             raise ValidationError("AI provider unavailable")
-        raise ValidationError("Anthropic provider not implemented yet")
+        payload = {
+            "model": model,
+            "max_tokens": 2500,
+            "system": system_prompt,
+            "messages": [{"role": "user", "content": user_prompt}],
+        }
+        req = urlrequest.Request(
+            url="https://api.anthropic.com/v1/messages",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            with urlrequest.urlopen(req, timeout=45) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+        except (urlerror.URLError, urlerror.HTTPError) as exc:
+            raise ValidationError(f"Anthropic request failed: {exc}")
+        for part in data.get("content", []):
+            if part.get("type") == "text" and part.get("text"):
+                return part["text"]
+        raise ValidationError("Anthropic empty response")
 
 
 class GeminiProvider(BaseLLMProvider):
     def generate(self, system_prompt: str, user_prompt: str, model: str) -> str:
-        if not os.getenv("GEMINI_API_KEY"):
+        api_key = os.getenv("GEMINI_API_KEY") or getattr(settings, "GEMINI_API_KEY", "")
+        if not api_key:
             raise ValidationError("AI provider unavailable")
-        raise ValidationError("Gemini provider not implemented yet")
+        payload = {
+            "system_instruction": {"parts": [{"text": system_prompt}]},
+            "contents": [{"role": "user", "parts": [{"text": user_prompt}]}],
+            "generationConfig": {"temperature": 0.2},
+        }
+        req = urlrequest.Request(
+            url=f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urlrequest.urlopen(req, timeout=45) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+        except (urlerror.URLError, urlerror.HTTPError) as exc:
+            raise ValidationError(f"Gemini request failed: {exc}")
+        for cand in data.get("candidates", []):
+            for part in cand.get("content", {}).get("parts", []):
+                if part.get("text"):
+                    return part["text"]
+        raise ValidationError("Gemini empty response")
 
 
 def _get_provider(name: str):

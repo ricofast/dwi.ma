@@ -73,3 +73,16 @@ def message_generation_result(request, job_id: UUID):
     job = get_object_or_404(AIJob, id=job_id, user=request.user, job_type=AIJob.JobType.MESSAGE_GENERATION)
     data = job.result_json or {}
     return {"job_id": str(job.id), "status": job.status, "detected_intent": data.get("detected_intent", ""), "missing_information": data.get("missing_information", []), "generated_message": data.get("generated_message", ""), "suggested_subject": data.get("suggested_subject", ""), "notes_darija": data.get("notes_darija", "")}
+
+
+class FeedbackIn(BaseModel):
+    rating: str
+    comment: str = ""
+
+@router.post("/assistant/jobs/{job_id}/feedback")
+def submit_feedback(request, job_id: UUID, payload: FeedbackIn):
+    require_auth(request)
+    job = get_object_or_404(AIJob, id=job_id, user=request.user)
+    from apps.assistant.models import UserFeedback
+    fb, _ = UserFeedback.objects.update_or_create(user=request.user, ai_job=job, defaults={"rating": payload.rating, "comment": payload.comment})
+    return {"status": "ok", "feedback_id": str(fb.id)}
