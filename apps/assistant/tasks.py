@@ -6,7 +6,7 @@ from apps.assistant.models import AIJob
 from apps.assistant.services.text_explanation import explain_text
 
 
-@app.task(bind=True)
+@app.task(bind=True, max_retries=3)
 def explain_text_task(self, user_id, input_text, options=None):
     options = options or {}
     user = get_user_model().objects.filter(id=user_id).first()

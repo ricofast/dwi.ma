@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "django.contrib.humanize",
+
     # "allauth",
     # "allauth.account",
     # "allauth.socialaccount",
@@ -42,6 +43,8 @@ INSTALLED_APPS = [
     "apps.assistant",
     "apps.notifications",
     "apps.core",
+    "django_celery_results",
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
@@ -127,8 +130,27 @@ AUTH_USER_MODEL = "accounts.User"
 
 REDIS_URL = env("REDIS_URL", default="redis://localhost:6379/0")
 CELERY_BROKER_URL = REDIS_URL
-CELERY_RESULT_BACKEND = REDIS_URL
+CCELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_RESULT_EXTENDED = True
+# Add a one-minute timeout to all Celery tasks.
+# CELERYD_TASK_SOFT_TIME_LIMIT = 55
 CELERY_TASK_ALWAYS_EAGER = False
+
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+
+CELERY_TIMEZONE = "Africa/Casablanca"
+
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 10 * 60
+CELERY_TASK_SOFT_TIME_LIMIT = 60
+
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_TASK_ACKS_LATE = True
+
+
 
 DEFAULT_FREE_CREDITS = env.int("DEFAULT_FREE_CREDITS", default=3)
 
