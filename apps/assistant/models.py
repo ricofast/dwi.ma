@@ -45,6 +45,7 @@ class PromptTemplate(models.Model):
     active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    result_text = models.TextField(null=True, blank=True)
 
 
 class AIResponse(models.Model):
