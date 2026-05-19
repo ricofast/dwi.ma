@@ -186,7 +186,7 @@ def generate_document_explanation(document_text, provider=None, model=None):
     model_name = model or getattr(settings, "DEFAULT_LLM_MODEL", "mock-1")
     p = _get_provider(provider_name)
     instructions = "none"
-    user_prompt = tmpl.user_prompt_template.replace("{{document_text}}", document_text)
+    user_prompt = tmpl.user_prompt_template.replace("{document_content}", document_text)
     print("user_prompt", user_prompt)
     print("*************************************************************************")
     print("system_prompt", tmpl.system_prompt)
