@@ -8,7 +8,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 
 from apps.assistant.models import PromptTemplate
-from apps.assistant.prompts import DOCUMENT_EXPLANATION_USER_PROMPT, DOCUMENT_EXPLANATION_SYSTEM_PROMPT
+from apps.assistant.schemas.prompts import DOCUMENT_EXPLANATION_USER_PROMPT, DOCUMENT_EXPLANATION_SYSTEM_PROMPT
 
 REQUIRED_KEYS = {"document_type", "short_summary_darija", "important_points_darija", "extracted_entities", "unclear_points_darija", "next_steps_darija", "disclaimer_darija", "full_answer_darija"}
 
