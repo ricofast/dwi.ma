@@ -196,6 +196,8 @@ def generate_document_explanation(document_text, provider=None, model=None):
     print("model name", model_name)
     raw = p.generate(tmpl.system_prompt, user_prompt, instructions, model_name)
     print(raw)
+    tmpl.result_text = raw
+    tmpl.save()
     def parse_or_none(text):
         try:
             data = json.loads(text)
