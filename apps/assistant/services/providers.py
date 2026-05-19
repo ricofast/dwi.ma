@@ -8,6 +8,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 
 from apps.assistant.models import PromptTemplate
+from apps.assistant.prompts import DOCUMENT_EXPLANATION_USER_PROMPT, DOCUMENT_EXPLANATION_SYSTEM_PROMPT
 
 REQUIRED_KEYS = {"document_type", "short_summary_darija", "important_points_darija", "extracted_entities", "unclear_points_darija", "next_steps_darija", "disclaimer_darija", "full_answer_darija"}
 
@@ -186,20 +187,24 @@ def generate_document_explanation(document_text, provider=None, model=None):
     model_name = model or getattr(settings, "DEFAULT_LLM_MODEL", "mock-1")
     p = _get_provider(provider_name)
     instructions = "none"
-    user_prompt = tmpl.user_prompt_template.replace("{document_content}", document_text)
+    # user_prompt = tmpl.user_prompt_template.replace("{document_content}", document_text)
+    user_prompt = DOCUMENT_EXPLANATION_USER_PROMPT.replace("{document_content}", document_text)
+    system_prompt = DOCUMENT_EXPLANATION_SYSTEM_PROMPT
     print("user_prompt", user_prompt)
     print("*************************************************************************")
-    print("system_prompt", tmpl.system_prompt)
+    print("system_prompt", system_prompt)
     print("*************************************************************************")
     print("instructions", instructions)
     print("*************************************************************************")
     print("model name", model_name)
-    raw = p.generate(tmpl.system_prompt, user_prompt, instructions, model_name)
+    raw = p.generate(system_prompt, user_prompt, instructions, model_name)
     print("*************************************************************************")
     print("*************************************************************************")
     print("raw:", raw)
     print("*************************************************************************")
     print("*************************************************************************")
+    print("Type of raw:", type(raw))
+
     tmpl.result_text = raw
     tmpl.save()
     def parse_or_none(text):

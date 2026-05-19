@@ -28,6 +28,7 @@ Rules:
 - Use simple Moroccan Darija in Arabic script.
 - Keep the answer organized and practical.
 - Return valid JSON only.
+- for boolean values (False and True) and none values put them inside double quotes to avoid errors in loading as json
 - Do not use markdown."""
 
 
