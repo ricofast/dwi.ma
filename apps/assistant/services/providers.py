@@ -195,7 +195,11 @@ def generate_document_explanation(document_text, provider=None, model=None):
     print("*************************************************************************")
     print("model name", model_name)
     raw = p.generate(tmpl.system_prompt, user_prompt, instructions, model_name)
-    print(raw)
+    print("*************************************************************************")
+    print("*************************************************************************")
+    print("raw:", raw)
+    print("*************************************************************************")
+    print("*************************************************************************")
     tmpl.result_text = raw
     tmpl.save()
     def parse_or_none(text):
