@@ -125,7 +125,7 @@ class GeminiProvider(BaseLLMProvider):
             "generationConfig": {
                 "responseMimeType": "application/json",
                 "temperature": 0.2,
-                "maxOutputTokens": 2000,
+                "maxOutputTokens": 3000,
                 # Define the exact structural schema directly in the JSON body
                 "responseSchema": {
                     "type": "OBJECT",
