@@ -131,8 +131,11 @@ AUTH_USER_MODEL = "accounts.User"
 REDIS_URL = env("REDIS_URL", default="redis://localhost:6379/0")
 CELERY_BROKER_URL = REDIS_URL
 CCELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+# Store resutlts in database
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_RESULT_EXTENDED = True
+
 # Add a one-minute timeout to all Celery tasks.
 # CELERYD_TASK_SOFT_TIME_LIMIT = 55
 CELERY_TASK_ALWAYS_EAGER = False

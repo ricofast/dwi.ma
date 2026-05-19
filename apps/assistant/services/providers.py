@@ -207,7 +207,7 @@ def generate_document_explanation(document_text, provider=None, model=None):
 
     parsed = parse_or_none(raw)
     if parsed is None:
-        repair = p.generate("You repair invalid JSON outputs. Return valid JSON only.", f"Repair JSON: {raw}", model_name)
+        repair = p.generate("You repair invalid JSON outputs. Return valid JSON only.", f"Repair JSON: {raw}", instructions, model_name)
         parsed = parse_or_none(repair)
         if parsed is None:
             raise ValidationError("Failed to parse AI response")
