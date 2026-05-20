@@ -1,5 +1,6 @@
 from datetime import datetime
 from uuid import UUID
+import base64
 
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
@@ -16,6 +17,8 @@ from apps.accounts.services.consent import log_consent
 from apps.accounts.models import ConsentLog
 from apps.documents.services.deletion import delete_document_for_user
 from apps.core.services.errors import get_safe_error_message
+from apps.documents.services.schemas import DynamicProcessPayload
+from apps.documents.services.gemini_services import GeminiDwiRestEngine
 
 router = Router(tags=["documents"])
 
@@ -26,6 +29,32 @@ class DocumentOut(BaseModel):
     filename: str
     file_type: str
     file_size: int
+
+
+@router.post("/documents/g_analyze", response=dict)
+@router.post("/documents/g_analyze/", response=dict)
+@router.get("/documents/g_analyze", response=dict)
+@router.get("/documents/g_analyze/", response=dict)
+def api_routing_gateway(request, payload: DynamicProcessPayload):
+    require_auth(request)
+    engine = GeminiDwiRestEngine()
+
+    # Condition A: Text extraction was successful
+    if payload.extracted_text and len(payload.extracted_text.strip()) > 0:
+        return engine.execute_analysis(
+            instruction=payload.user_instruction,
+            text_context=payload.extracted_text
+        )
+
+    # Condition B: Fallback triggered. Send original document directly to Gemini
+    if payload.file_base64 and payload.mime_type:
+        return engine.execute_analysis(
+            instruction=payload.user_instruction,
+            file_b64=payload.file_base64,
+            mime_type=payload.mime_type
+        )
+
+    return {"error": "Missing valid data inputs to process request context."}
 
 
 @router.post("/documents/upload", response=DocumentOut)
@@ -132,9 +161,6 @@ def explain_doc(request, document_id: UUID):
     require_auth(request)
     doc = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
     amount = int(getattr(settings, "CREDITS_COST_DOCUMENT_EXPLANATION", 2))
-    print("Document ID:", document_id)
-    print("*************************************************************************")
-    print("document fetched id:", doc.id)
     if not hasattr(doc, "extracted_text") or doc.status != UploadedDocument.Status.EXTRACTED:
         raise HttpError(400, get_safe_error_message("DOCUMENT_UNREADABLE"))
     if not can_spend(request.user, amount):

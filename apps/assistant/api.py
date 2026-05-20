@@ -4,9 +4,6 @@ from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.errors import HttpError
 from pydantic import BaseModel
-import os
-from google import genai
-from google.genai import types
 
 from django.conf import settings
 from apps.accounts.auth import require_auth
@@ -14,8 +11,7 @@ from apps.assistant.models import AIJob
 import hashlib
 from apps.assistant.tasks import explain_text_task
 from apps.wallet.services import can_spend
-from apps.assistant.schemas.schemas import UserDocumentPayload, GeminiDwiResponseSchema
-from apps.assistant.services.gemini_services import GeminiDwiEngine
+from apps.assistant.schemas.schemas import UserDocumentPayload
 from apps.assistant.services.providers import _get_provider
 
 router = Router(tags=["assistant"])
