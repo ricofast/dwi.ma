@@ -138,7 +138,7 @@ def call_gemini_api(document):
 
     # 2. Request Analysis
     response = client.models.generate_content(
-        model="gemini-3.1-pro",
+        model=llm_model,
         contents=[
             "Instruction: Explain this document in simple Moroccan Darija.",
             file_part
