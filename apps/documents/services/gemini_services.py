@@ -11,7 +11,7 @@ from django.conf import settings
 from apps.assistant.schemas.prompts import DWI_SYSTEM_PROMPT
 from apps.documents.services.schemas import GeminiDwiResponseSchema
 
-client = genai.Client(api_key="GEMINI_API_KEY")
+
 llm_provider = getattr(settings, "DEFAULT_LLM_PROVIDER")
 llm_model = getattr(settings, "DEFAULT_LLM_MODEL")
 
@@ -135,6 +135,8 @@ def call_gemini_api(document):
         mime_type = 'application/octet-stream'
 
     file_part = types.Part.from_bytes(data=file_bytes, mime_type=mime_type)
+    api_key = os.getenv("DJANGO_GEMINIAPI") or getattr(settings, "GEMINI_API_KEY", "")
+    client = genai.Client(api_key=api_key)
 
     # 2. Request Analysis
     response = client.models.generate_content(
