@@ -36,6 +36,7 @@ def explain_document(document_id, user):
         print("*************************************************************************")
         if llm_provider == "gemini":
             res = call_gemini_api(document)
+            print("raw response:", res)
         else:
             res = generate_document_explanation(document.extracted_text.text)
 
@@ -53,13 +54,14 @@ def explain_document(document_id, user):
         # analysis = DocumentAnalysis.objects.create(document=document, ai_job=ai_job, document_type=p.get("document_type", ""), summary_darija=p.get("short_summary_darija", ""), important_points_json=p.get("important_points_darija", []), extracted_entities_json=p.get("extracted_entities", {}), unclear_points_json=p.get("unclear_points_darija", []), next_steps_json=p.get("next_steps_darija", []), disclaimer_darija=p.get("disclaimer_darija", ""), full_response_text=p.get("full_answer_darija", ""))
         analysis = DocumentAnalysis.objects.create(document=document, ai_job=ai_job,
                                                    # document_type=p.get("document_type", ""),
-                                                   summary_darija=res,
+                                                   # summary_darija=res,
                                                    # important_points_json=p.get("important_points_darija", []),
                                                    # extracted_entities_json=p.get("extracted_entities", {}),
                                                    # unclear_points_json=p.get("unclear_points_darija", []),
                                                    # next_steps_json=p.get("next_steps_darija", []),
                                                    # disclaimer_darija=p.get("disclaimer_darija", ""),
-                                                   full_response_text=res)
+                                                   # full_response_text=res
+                                                   )
         document.status = UploadedDocument.Status.COMPLETED
         document.save(update_fields=["status", "updated_at"])
         charge_reserved_usage(usage)
