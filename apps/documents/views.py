@@ -6,7 +6,8 @@ from django.views.generic import TemplateView
 from django.conf import settings
 from apps.accounts.models import ConsentLog
 from apps.accounts.services.consent import log_consent
-from apps.documents.models import UploadedDocument
+from apps.documents.models import UploadedDocument, DocumentAnalysis
+from apps.documents.tasks import explain_document_task
 from apps.documents.services.extraction import (
     calculate_file_hash,
     extract_text,
@@ -63,6 +64,9 @@ class UploadPageView(LoginRequiredMixin, TemplateView):
             status=UploadedDocument.Status.UPLOADED,
         )
 
+        # Call the LLM API
+        explain_document_task.delay(str(document.id), str(request.user.id))
+
         messages.success(request, "تم رفع الوثيقة بنجاح")
         return redirect("document:document_detail", document_id=document.id)
 
@@ -105,3 +109,4 @@ class DocumentExplainView(UserDocumentMixin, TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         doc = ctx["document"]
+        ctx["result"] = DocumentAnalysis.objects.filter(document=doc).first()
