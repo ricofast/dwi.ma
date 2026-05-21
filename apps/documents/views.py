@@ -97,3 +97,11 @@ class DocumentDetailView(UserDocumentMixin, TemplateView):
 
 class ExtractionResultView(UserDocumentMixin, TemplateView):
     template_name = "documents/extraction_result.html"
+
+
+class DocumentExplainView(UserDocumentMixin, TemplateView):
+    template_name = "documents/analysis_result.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        doc = ctx["document"]

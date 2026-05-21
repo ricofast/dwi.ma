@@ -153,4 +153,4 @@ def call_gemini_api(document):
     )
 
     # 3. Return parsed object (GeminiDwiResponseSchema)
-    return response.parsed, response
+    return response.parsed

@@ -86,5 +86,8 @@ class DocumentAnalysis(models.Model):
     next_steps_json = models.JSONField(default=list, blank=True)
     disclaimer_darija = models.TextField(blank=True, default="")
     full_response_text = models.TextField(blank=True, default="")
+    candidates_tokens = models.PositiveIntegerField(blank=True, null=True)
+    prompt_tokens = models.PositiveIntegerField(blank=True, null=True)
+    response_tokens = models.PositiveIntegerField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

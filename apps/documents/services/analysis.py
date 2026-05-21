@@ -1,5 +1,5 @@
 import hashlib
-
+import json
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.conf import settings
@@ -35,8 +35,11 @@ def explain_document(document_id, user):
         print(document.extracted_text.text)
         print("*************************************************************************")
         if llm_provider == "gemini":
-            res, res_json = call_gemini_api(document)
-            print("raw response:", res_json)
+            res = call_gemini_api(document)
+            if not res.is_unclear:
+                print(f"The explanation is: {res.explanation}")
+                # Convert the object to a JSON string
+                json_output = res.model_dump_json()
         else:
             res = generate_document_explanation(document.extracted_text.text)
 
@@ -53,14 +56,14 @@ def explain_document(document_id, user):
         # p = res["parsed_json"]
         # analysis = DocumentAnalysis.objects.create(document=document, ai_job=ai_job, document_type=p.get("document_type", ""), summary_darija=p.get("short_summary_darija", ""), important_points_json=p.get("important_points_darija", []), extracted_entities_json=p.get("extracted_entities", {}), unclear_points_json=p.get("unclear_points_darija", []), next_steps_json=p.get("next_steps_darija", []), disclaimer_darija=p.get("disclaimer_darija", ""), full_response_text=p.get("full_answer_darija", ""))
         analysis = DocumentAnalysis.objects.create(document=document, ai_job=ai_job,
-                                                   # document_type=p.get("document_type", ""),
-                                                   # summary_darija=res,
-                                                   # important_points_json=p.get("important_points_darija", []),
-                                                   # extracted_entities_json=p.get("extracted_entities", {}),
-                                                   # unclear_points_json=p.get("unclear_points_darija", []),
-                                                   # next_steps_json=p.get("next_steps_darija", []),
-                                                   # disclaimer_darija=p.get("disclaimer_darija", ""),
-                                                   # full_response_text=res
+                                                   document_type=res.document_type,
+                                                   summary_darija=res.short_summary_darija,
+                                                   important_points_json=json.dumps(res.important_points_darija),
+                                                   extracted_entities_json=json.dumps(res.extracted_entities),
+                                                   unclear_message=json.dumps(res.unclear_points_darija),
+                                                   next_steps_json=json.dumps(res.next_steps_darija),
+                                                   disclaimer_darija=res.disclaimer_darija,
+                                                   full_response_text=res.full_answer_darija
                                                    )
         document.status = UploadedDocument.Status.COMPLETED
         document.save(update_fields=["status", "updated_at"])
