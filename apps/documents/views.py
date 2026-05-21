@@ -110,3 +110,4 @@ class DocumentExplainView(UserDocumentMixin, TemplateView):
         ctx = super().get_context_data(**kwargs)
         doc = ctx["document"]
         ctx["result"] = DocumentAnalysis.objects.filter(document=doc).first()
+        return ctx
