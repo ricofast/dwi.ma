@@ -35,8 +35,8 @@ def explain_document(document_id, user):
         print(document.extracted_text.text)
         print("*************************************************************************")
         if llm_provider == "gemini":
-            res = call_gemini_api(document)
-            print("raw response:", res)
+            res, res_json = call_gemini_api(document)
+            print("raw response:", res_json)
         else:
             res = generate_document_explanation(document.extracted_text.text)
 
