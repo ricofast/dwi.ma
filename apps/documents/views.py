@@ -68,7 +68,7 @@ class UploadPageView(LoginRequiredMixin, TemplateView):
 
         # Call the LLM API
         client = TestClient(explain_doc)
-        response = client.post(f"/api/documents/{{ document.id }}/explain/")
+        response = client.get(f"/api/documents/{{ document.id }}/explain/")
         # explain_document_task.delay(str(document.id), str(request.user.id))
 
         messages.success(request, "تم رفع الوثيقة بنجاح")
