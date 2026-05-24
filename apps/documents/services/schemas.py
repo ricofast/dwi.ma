@@ -53,7 +53,7 @@ class GeminiDwiResponseSchema(BaseModel):
     important_points_darija: List[str] = Field(
         description="A list of key takeaways or critical facts extracted from the document in Darija.")
 
-    extracted_entities: Dict[str, Any] = Field(
+    extracted_entities: List[str, Any] = Field(
         description="A dictionary of key entities like names, dates, amounts, or IDs found in the document (e.g., {'المالك': '...', 'التاريخ': '...'}).")
 
     unclear_points_darija: List[str] = Field(
