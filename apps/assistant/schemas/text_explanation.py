@@ -2,7 +2,6 @@
 
 TEXT_EXPLANATION_SCHEMA = {
     "type": "object",
-    "additionalProperties": False,
     "required": [
         "service",
         "text_type",
@@ -34,7 +33,6 @@ TEXT_EXPLANATION_SCHEMA = {
         },
         "risk_category": {
             "type": "object",
-            "additionalProperties": False,
             "required": [
                 "is_high_risk",
                 "categories",
@@ -85,7 +83,6 @@ TEXT_EXPLANATION_SCHEMA = {
         },
         "extracted_entities": {
             "type": "object",
-            "additionalProperties": False,
             "required": [
                 "people_names",
                 "organizations",

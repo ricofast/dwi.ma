@@ -2,7 +2,6 @@
 
 MESSAGE_GENERATION_SCHEMA = {
     "type": "object",
-    "additionalProperties": False,
     "required": [
         "service",
         "detected_intent_darija",

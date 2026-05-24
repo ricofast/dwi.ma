@@ -2,7 +2,6 @@
 
 COMPLAINT_GENERATION_SCHEMA = {
     "type": "object",
-    "additionalProperties": False,
     "required": [
         "service",
         "complaint_target",

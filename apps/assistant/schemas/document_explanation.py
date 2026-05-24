@@ -2,7 +2,6 @@
 
 DOCUMENT_EXPLANATION_SCHEMA = {
     "type": "object",
-    "additionalProperties": False,
     "required": [
         "service",
         "document_type",
@@ -32,7 +31,6 @@ DOCUMENT_EXPLANATION_SCHEMA = {
         },
         "risk_category": {
             "type": "object",
-            "additionalProperties": False,
             "required": ["is_high_risk", "categories", "reason_darija"],
             "properties": {
                 "is_high_risk": {"type": "boolean"},
@@ -65,7 +63,6 @@ DOCUMENT_EXPLANATION_SCHEMA = {
         },
         "extracted_entities": {
             "type": "object",
-            "additionalProperties": False,
             "required": [
                 "people_names",
                 "organizations",
