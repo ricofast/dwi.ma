@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Dict, Any
 
 
@@ -44,6 +44,7 @@ class DynamicProcessPayload(BaseModel):
 #     )
 
 class GeminiDwiResponseSchema(BaseModel):
+    model_config = ConfigDict(extra='forbid')
     document_type: str = Field(description="The category of the document (e.g., 'فاتورة', 'عقد كراء', 'استمارة CNSS').")
 
     short_summary_darija: str = Field(
