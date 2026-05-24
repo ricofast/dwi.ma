@@ -52,7 +52,7 @@ def explain_document(document_id, user):
         ai_job.status = AIJob.Status.COMPLETED
         ai_job.completed_at = timezone.now()
         ai_job.save()
-        # AIResponse.objects.create(ai_job=ai_job, raw_response_text=res["raw_response_text"], parsed_json=res["parsed_json"])
+        AIResponse.objects.create(ai_job=ai_job, raw_response_text=res.full_answer_darija)
         # p = res["parsed_json"]
         # analysis = DocumentAnalysis.objects.create(document=document, ai_job=ai_job, document_type=p.get("document_type", ""), summary_darija=p.get("short_summary_darija", ""), important_points_json=p.get("important_points_darija", []), extracted_entities_json=p.get("extracted_entities", {}), unclear_points_json=p.get("unclear_points_darija", []), next_steps_json=p.get("next_steps_darija", []), disclaimer_darija=p.get("disclaimer_darija", ""), full_response_text=p.get("full_answer_darija", ""))
         analysis = DocumentAnalysis.objects.create(document=document, ai_job=ai_job,

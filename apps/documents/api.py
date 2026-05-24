@@ -78,6 +78,7 @@ def upload_document(request, file: UploadedFile = File(...), consent_accepted: b
         source=source,
         status=UploadedDocument.Status.UPLOADED,
     )
+    explain_document_task.delay(str(document.id), str(request.user.id))
     return DocumentOut(
         document_id=document.id,
         status=document.status,
