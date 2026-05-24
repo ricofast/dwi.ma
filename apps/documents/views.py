@@ -4,7 +4,6 @@ from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import TemplateView
 from django.conf import settings
-from ninja.testing import TestClient
 from apps.accounts.models import ConsentLog
 from apps.accounts.services.consent import log_consent
 from apps.documents.models import UploadedDocument, DocumentAnalysis
@@ -14,7 +13,6 @@ from apps.documents.services.extraction import (
     extract_text,
     validate_document_file,
 )
-from apps.documents.api import explain_doc
 from apps.wallet.services import get_balance
 
 
@@ -65,11 +63,6 @@ class UploadPageView(LoginRequiredMixin, TemplateView):
             source="pwa",
             status=UploadedDocument.Status.UPLOADED,
         )
-
-        # Call the LLM API
-        client = TestClient(explain_doc)
-        response = client.get(f"/api/documents/{{ document.id }}/explain/")
-        # explain_document_task.delay(str(document.id), str(request.user.id))
 
         messages.success(request, "تم رفع الوثيقة بنجاح")
         return redirect("document:document_detail", document_id=document.id)

@@ -109,6 +109,7 @@ def _extract_document(request, document_id: UUID):
     doc.status = UploadedDocument.Status.EXTRACTING
     doc.save(update_fields=["status", "updated_at"])
     extract_text(doc)
+    explain_document_task.delay(str(document_id), str(request.user.id))
     doc.refresh_from_db()
     return {"document_id": str(doc.id), "status": doc.status}
 
@@ -165,7 +166,9 @@ def explain_doc(request, document_id: UUID):
         raise HttpError(400, get_safe_error_message("DOCUMENT_UNREADABLE"))
     if not can_spend(request.user, amount):
         raise HttpError(402, get_safe_error_message("INSUFFICIENT_CREDITS"))
-    job = AIJob.objects.create(user=request.user, job_type=AIJob.JobType.DOCUMENT_EXPLANATION, provider="", model="", status=AIJob.Status.QUEUED, input_hash="", input_preview="", prompt_version="")
+    job = AIJob.objects.create(user=request.user, job_type=AIJob.JobType.DOCUMENT_EXPLANATION, provider="", model="",
+                               status=AIJob.Status.QUEUED, input_hash="", input_preview="", prompt_version="")
+    # analysis = DocumentAnalysis.objects.create(document=doc, ai_job=job)
     explain_document_task.delay(str(document_id), str(request.user.id))
     return {"job_id": str(job.id), "document_id": str(document_id), "status": "queued"}
 
