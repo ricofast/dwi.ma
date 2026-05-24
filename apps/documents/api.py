@@ -8,7 +8,7 @@ from django.conf import settings
 from ninja import File, Form, Router
 from ninja.files import UploadedFile
 from ninja.errors import HttpError
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from apps.accounts.auth import require_auth
 from apps.documents.models import UploadedDocument
@@ -24,7 +24,7 @@ router = Router(tags=["documents"])
 
 
 class DocumentOut(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+
     document_id: UUID
     status: str
     filename: str
@@ -153,7 +153,6 @@ from apps.wallet.services import can_spend
 
 
 class ExplainIn(BaseModel):
-    model_config = ConfigDict(extra='forbid')
     output_language: str = "darija_arabic"
 
 
