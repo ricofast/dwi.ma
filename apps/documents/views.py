@@ -3,11 +3,10 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import TemplateView
-from django.conf import settings
+
 from apps.accounts.models import ConsentLog
 from apps.accounts.services.consent import log_consent
-from apps.documents.models import UploadedDocument, DocumentAnalysis
-from apps.documents.tasks import explain_document_task
+from apps.documents.models import UploadedDocument
 from apps.documents.services.extraction import (
     calculate_file_hash,
     extract_text,
@@ -21,7 +20,6 @@ class UploadPageView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["credit"] = int(getattr(settings, "CREDITS_COST_DOCUMENT_EXPLANATION", 2))
         ctx["active_tab"] = "documents"
         ctx["balance"] = get_balance(self.request.user)
         return ctx
@@ -98,13 +96,3 @@ class DocumentDetailView(UserDocumentMixin, TemplateView):
 
 class ExtractionResultView(UserDocumentMixin, TemplateView):
     template_name = "documents/extraction_result.html"
-
-
-class DocumentExplainView(UserDocumentMixin, TemplateView):
-    template_name = "documents/analysis_result.html"
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        doc = ctx["document"]
-        ctx["result"] = DocumentAnalysis.objects.filter(document=doc).first()
-        return ctx

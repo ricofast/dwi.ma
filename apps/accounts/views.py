@@ -25,8 +25,7 @@ class PhoneLoginView(View):
     def post(self, request):
         form = PhoneLoginForm(request.POST)
         if form.is_valid():
-            user = form.get_user()
-            login(request, user)
+            login(request, form.user)
             next_url = request.GET.get("next", "dashboard")
             return redirect(next_url)
         return render(request, "registration/login.html", {"form": form})
