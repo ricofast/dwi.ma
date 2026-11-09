@@ -6,7 +6,7 @@ from django.views.generic import TemplateView
 
 from apps.accounts.models import ConsentLog
 from apps.accounts.services.consent import log_consent
-from apps.documents.models import UploadedDocument
+from apps.documents.models import UploadedDocument, DocumentAnalysis
 from apps.documents.services.extraction import (
     calculate_file_hash,
     extract_text,
@@ -96,3 +96,13 @@ class DocumentDetailView(UserDocumentMixin, TemplateView):
 
 class ExtractionResultView(UserDocumentMixin, TemplateView):
     template_name = "documents/extraction_result.html"
+
+
+class DocumentExplainView(UserDocumentMixin, TemplateView):
+    template_name = "documents/analysis_result.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        doc = ctx["document"]
+        ctx["result"] = DocumentAnalysis.objects.filter(document=doc).first()
+        return ctx
