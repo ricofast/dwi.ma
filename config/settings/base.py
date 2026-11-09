@@ -129,7 +129,11 @@ AUDIO_MAX_UPLOAD_MB = env.int("AUDIO_MAX_UPLOAD_MB", default=15)
 ALLOWED_AUDIO_EXTENSIONS = [e.strip() for e in env.str("ALLOWED_AUDIO_EXTENSIONS", default="mp3,mp4,m4a,wav,webm,ogg,opus").split(",") if e.strip()]
 TRANSCRIPTION_PROVIDER = env.str("TRANSCRIPTION_PROVIDER", default="mock")
 TRANSCRIPTION_MODEL = env.str("TRANSCRIPTION_MODEL", default="mock-transcribe")
-OPENAI_API_KEY = env.str("OPENAI_API_KEY", default="")
+OPENAI_API_KEY = env.str("DJANGO_OPENAI", default="")
+ANTHROPIC_API_KEY = env.str("DJANGO_ANTHROPICAPI", default="")
+GEMINI_API_KEY = env.str("DJANGO_GEMINIAPI", default="")
+DEFAULT_LLM_PROVIDER = env.str("DEFAULT_LLM_PROVIDER", default="mock")
+DEFAULT_LLM_MODEL = env.str("DEFAULT_LLM_MODEL", default="mock-1")
 
 
 PAYMENT_PROVIDER = env.str("PAYMENT_PROVIDER", default="mock")
@@ -147,3 +151,27 @@ AUDIO_ORIGINAL_RETENTION_DAYS = env.int("AUDIO_ORIGINAL_RETENTION_DAYS", default
 DELETE_EXTRACTED_TEXT_ON_DOCUMENT_DELETE = env.bool("DELETE_EXTRACTED_TEXT_ON_DOCUMENT_DELETE", default=True)
 DELETE_TRANSCRIPT_ON_AUDIO_DELETE = env.bool("DELETE_TRANSCRIPT_ON_AUDIO_DELETE", default=True)
 DELETE_AI_RESULTS_ON_SOURCE_DELETE = env.bool("DELETE_AI_RESULTS_ON_SOURCE_DELETE", default=False)
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+
+CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+# Provider specific settings
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        # For each OAuth based provider, either add a ``SocialApp``
+        # (``socialaccount`` app) containing the required client
+        # credentials, or list them here:
+        'APP': {
+            'client_id': '123',
+            'secret': '456',
+            'key': ''
+        }
+    }
+}
+
+# Required credits per operation
+CREDITS_COST_DOCUMENT_EXPLANATION = 2
+CREDITS_COST_MESSAGE_GENERATION = 1
+CREDITS_COST_TEXT_EXPLANATION = 1
+CREDITS_COST_VOICE_MESSAGE = 1
