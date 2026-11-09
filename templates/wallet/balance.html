@@ -40,7 +40,7 @@
     <div class="dw-card" style="padding:0;">
       {% for event in recent_usage %}
       <div class="dw-row dw-gap-md" style="padding:0.75rem 1.25rem;border-bottom:1px solid var(--dw-gray-100);{% if forloop.last %}border-bottom:none;{% endif %}">
-        <div style="width:36px;height:36px;border-radius:var(--dw-radius-md);display:flex;align-items:center;justify-content:center;flex-shrink:0;{% if event.status == 'charged' %}background:#fef2f2;{% elif event.status == 'refunded' %}background:#dcfce7;{% else %}background:var(--dw-gray-100);{% endif %}">
+        <div style="width:36px;height:36px;border-radius:var(--dw-radius-md);display:flex;align-items:center;justify-content:center;flex-shrink:0;{% if event.status == 'charged' %}background:var(--dw-danger-bg);{% elif event.status == 'refunded' %}background:var(--dw-success-bg);{% else %}background:var(--dw-gray-100);{% endif %}">
           {% if event.status == 'charged' %}
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--dw-danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
           {% elif event.status == 'refunded' %}

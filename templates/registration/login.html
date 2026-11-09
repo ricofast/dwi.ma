@@ -1,8 +1,5 @@
-{% extends "base_public.html" %}
-{% load static %}
-
+{% extends "base_public.html" %}{% load static %}
 {% block title %}دخل · dwi.ma{% endblock %}
-
 
 {% block content %}
 <div class="dw-stack dw-gap-lg" style="max-width:400px;margin:0 auto;padding-top:2rem;">
@@ -10,7 +7,7 @@
   <!-- Brand -->
   <div class="dw-fade-in" style="text-align:center;">
     <a href="{% url 'landing' %}" style="text-decoration:none;">
-      <img src="{% static 'icons/logo-wordmark.svg' %}" alt="dwi.ma" height="28">
+      <img src="{% static 'icons/logo-wordmark.svg' %}" alt="dwi.ma" height="44" style="display:block;margin:0 auto;">
     </a>
     <p class="dw-body dw-text-muted" style="margin:0.5rem 0 0;">فهم الوثائق و كتابة الرسائل بدارجة</p>
   </div>
@@ -20,7 +17,7 @@
     <h1 style="font-size:1.25rem;font-weight:600;color:var(--dw-gray-900);margin:0 0 1.25rem;text-align:center;">دخل لحسابك</h1>
 
     {% if form.non_field_errors %}
-    <div style="padding:0.75rem 1rem;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--dw-radius-md);margin-bottom:1rem;">
+    <div style="padding:0.75rem 1rem;background:var(--dw-danger-bg);border:1px solid #fecaca;border-radius:var(--dw-radius-md);margin-bottom:1rem;">
       {% for error in form.non_field_errors %}
       <p style="margin:0;font-size:0.875rem;color:var(--dw-danger);">{{ error }}</p>
       {% endfor %}
@@ -31,10 +28,10 @@
       {% csrf_token %}
 
       <div class="dw-form-group" style="margin:0;">
-        <label class="dw-form-label" for="id_username">رقم الهاتف</label>
-        {{ form.username }}
-        {% if form.username.errors %}
-        <p class="dw-form-hint" style="color:var(--dw-danger);">{{ form.username.errors.0 }}</p>
+        <label class="dw-form-label" for="id_phone_number">رقم الهاتف</label>
+        {{ form.phone_number }}
+        {% if form.phone_number.errors %}
+        <p class="dw-form-hint" style="color:var(--dw-danger);">{{ form.phone_number.errors.0 }}</p>
         {% endif %}
       </div>
 

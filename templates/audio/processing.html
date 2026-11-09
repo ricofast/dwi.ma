@@ -80,7 +80,7 @@ document.body.addEventListener('htmx:afterRequest', function(evt) {
       window.location.href = '{% url "audio:transcription_result" voice_note_id=voice_note.id %}';
     } else if (data.status === 'transcription_failed' || data.status === 'failed') {
       document.getElementById('poll-status').innerHTML =
-        '<div class="dw-card" style="background:#fef2f2;border-color:#fecaca;text-align:center;">' +
+        '<div class="dw-card" style="background:var(--dw-danger-bg);border-color:#fecaca;text-align:center;">' +
         '<p style="color:var(--dw-danger);font-weight:600;margin:0;">ما قدرناش نفرّغو التسجيل</p>' +
         '<p class="dw-text-sm dw-text-muted" style="margin:0.5rem 0 0;">' + (data.error || 'جرب مرة أخرى') + '</p>' +
         '<a href="{% url "audio:upload" %}" class="dw-btn dw-btn-secondary" style="margin-top:1rem;">جرب مرة أخرى</a>' +

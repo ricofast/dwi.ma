@@ -38,7 +38,7 @@ document.body.addEventListener('htmx:afterRequest', function(evt) {
       window.location.href = '{% url "assistant:text_result" job_id=job.id %}';
     } else if (data.status === 'failed') {
       document.getElementById('job-poll').innerHTML =
-        '<div class="dw-card" style="background:#fef2f2;border-color:#fecaca;text-align:center;width:100%;">' +
+        '<div class="dw-card" style="background:var(--dw-danger-bg);border-color:#fecaca;text-align:center;width:100%;">' +
         '<p style="color:var(--dw-danger);font-weight:600;margin:0;">ما قدرناش نشرحو النص</p>' +
         '<p class="dw-text-sm dw-text-muted" style="margin:0.5rem 0 0;">' + (data.error_message || 'جرب مرة أخرى') + '</p>' +
         '<a href="{% url "assistant:explain_text_form" %}" class="dw-btn dw-btn-secondary" style="margin-top:1rem;">جرب نص آخر</a>' +

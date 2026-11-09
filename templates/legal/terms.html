@@ -1,6 +1,4 @@
-{% extends "base_public.html" %}
-{% load static %}
-
+{% extends "base_public.html" %}{% load static %}
 {% block title %}شروط الاستعمال · dwi.ma{% endblock %}
 
 {% block content %}
@@ -9,7 +7,7 @@
   <!-- Header -->
   <header class="dw-fade-in" style="text-align:center;margin-bottom:2.5rem;">
     <a href="{% url 'landing' %}" style="text-decoration:none;">
-      <img src="{% static 'icons/logo-wordmark.svg' %}" alt="dwi.ma" height="28">
+      <img src="{% static 'icons/logo-wordmark.svg' %}" alt="dwi.ma" height="36" style="display:block;margin:0 auto;">
     </a>
     <div style="width:48px;height:3px;background:var(--dw-amber-400);border-radius:2px;margin:1.25rem auto;"></div>
     <h1 style="font-family:var(--dw-font-display);font-size:1.5rem;font-weight:700;color:var(--dw-gray-900);margin:0;">شروط الاستعمال</h1>
@@ -81,7 +79,7 @@
     <div class="dw-legal-num" style="background:var(--dw-amber-500);color:var(--dw-amber-900);">5</div>
     <h2 class="dw-legal-heading">حدود المسؤولية</h2>
     <div class="dw-legal-body">
-      <div class="dw-card" style="background:#fef2f2;border-color:#fecaca;padding:1rem;margin-bottom:0.75rem;">
+      <div class="dw-card" style="background:var(--dw-danger-bg);border-color:#fecaca;padding:1rem;margin-bottom:0.75rem;">
         <p style="margin:0;font-size:0.875rem;font-weight:600;color:var(--dw-danger);">مهم بزاف:</p>
       </div>
       <ul>
